@@ -42,14 +42,23 @@ struct State
 
     void adjustView()
     {
-        text_view.position = {0, 0};
+        int cols = std::max(1u, window.getSize().x / FONT_WIDTH - 2);
+        int rows = std::max(1u, window.getSize().y / FONT_SIZE - 2);
+        text_view.size = {cols, rows};
         
-        if (cursor_pos.y >= text_view.position.y + text_view.size.y)
-            text_view.position.y = cursor_pos.y - text_view.size.y + 1;
-        if (cursor_pos.x >= text_view.position.x + text_view.size.x)
-            text_view.position.x = cursor_pos.x - text_view.size.x + 1;
+        if (cursor_pos.x < text_view.position.x) {
+            text_view.position.x = cursor_pos.x; // Esce a sx
+        } 
+        else if (cursor_pos.x >= text_view.position.x + text_view.size.x) {
+            text_view.position.x = cursor_pos.x - text_view.size.x + 1; // Esce a dx
+        }
 
-        text_view.size = sf::Vector2i(window.getSize().x - 2, window.getSize().y - 2);
+        if (cursor_pos.y < text_view.position.y) {
+            text_view.position.y = cursor_pos.y; // Esce in alto
+        } 
+        else if (cursor_pos.y >= text_view.position.y + text_view.size.y) {
+            text_view.position.y = cursor_pos.y - text_view.size.y + 1; // Esce in basso
+        }
     }
 };
 ///
@@ -64,12 +73,33 @@ void handle(const sf::Event::Closed &, State &gs)
 
 void handle(const sf::Event::TextEntered &textEnter, State &gs)
 {
-    if (textEnter.unicode == '\n' || textEnter.unicode == '\r') // enter
+    if (textEnter.unicode == '\b') // backspace
     {
+        if (gs.cursor_pos.x > 0)
+        {
+            --gs.cursor_pos.x;
+            gs.log[gs.cursor_pos.y].erase(gs.cursor_pos.x, 1);
+        }
+        else if (gs.cursor_pos.y > 0)
+        {
+            --gs.cursor_pos.y;
+            gs.cursor_pos.x = static_cast<int>(gs.log[gs.cursor_pos.y].size());
+            
+            gs.log[gs.cursor_pos.y].append(gs.log[gs.cursor_pos.y + 1]);
+            gs.log.erase(gs.log.begin() + gs.cursor_pos.y + 1);
+        }
+    }
+    else if (textEnter.unicode == '\n' || textEnter.unicode == '\r') // enter
+    {
+        std::string remainder = gs.log[gs.cursor_pos.y].substr(gs.cursor_pos.x);
+        
+        gs.log[gs.cursor_pos.y].erase(gs.cursor_pos.x);
+        
         ++gs.cursor_pos.y;
         gs.cursor_pos.x = 0;
-        gs.log.emplace(gs.log.begin() + gs.cursor_pos.y, "");
-    }    
+        
+        gs.log.emplace(gs.log.begin() + gs.cursor_pos.y, remainder);
+    }
     else if (textEnter.unicode >= ' ' && textEnter.unicode <= '~') // printable char
     {
         gs.log[gs.cursor_pos.y].insert(gs.cursor_pos.x, 1, static_cast<char>(textEnter.unicode));
@@ -83,6 +113,42 @@ void handle(const sf::Event::Resized &resized, State &gs)
 {
     sf::FloatRect visibleArea({0.f, 0.f}, sf::Vector2f(resized.size));
     gs.window.setView(sf::View(visibleArea));
+    gs.adjustView();
+}
+
+void handle(const sf::Event::KeyPressed &keyPressed, State &gs)
+{
+    if (keyPressed.code == sf::Keyboard::Key::Left)
+    {
+        if (gs.cursor_pos.x > 0)
+            --gs.cursor_pos.x;
+        else if (gs.cursor_pos.y > 0)
+        {
+            --gs.cursor_pos.y;
+            gs.cursor_pos.x = static_cast<int>(gs.log[gs.cursor_pos.y].size());
+        }
+    }
+    else if (keyPressed.code == sf::Keyboard::Key::Right)
+    {
+        if (gs.cursor_pos.x < gs.log[gs.cursor_pos.y].size())
+            ++gs.cursor_pos.x;
+        else if (gs.cursor_pos.y < gs.log.size() - 1)
+        {
+            ++gs.cursor_pos.y;
+            gs.cursor_pos.x = 0;
+        }
+    }
+    else if (keyPressed.code == sf::Keyboard::Key::Up && gs.cursor_pos.y > 0)
+    {
+        --gs.cursor_pos.y;
+        gs.cursor_pos.x = std::min(gs.cursor_pos.x, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
+    }
+    else if (keyPressed.code == sf::Keyboard::Key::Down && gs.cursor_pos.y < gs.log.size() - 1)
+    {
+        ++gs.cursor_pos.y;
+        gs.cursor_pos.x = std::min(gs.cursor_pos.x, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
+    }
+
     gs.adjustView();
 }
 
@@ -104,7 +170,7 @@ void doGraphics(State &gs)
     gs.window.clear();
     for (std::size_t i = 0; i < lines_to_print; ++i)
     {
-        if (gs.text_view.position.x >= gs.log[gs.text_view.position.y + i].size())
+        if (gs.text_view.position.x > gs.log[gs.text_view.position.y + i].size())
             continue;
 
         logText.setPosition({FONT_WIDTH, static_cast<float>(i * FONT_SIZE) + FONT_SIZE});
@@ -115,7 +181,7 @@ void doGraphics(State &gs)
     }
 
     logText.setPosition({static_cast<float>((gs.cursor_pos.x - gs.text_view.position.x + 1) * FONT_WIDTH),
-                         static_cast<float>((gs.cursor_pos.y - gs.text_view.position.y + 1) * FONT_SIZE + 3)});
+                         static_cast<float>((gs.cursor_pos.y - gs.text_view.position.y + 1) * FONT_SIZE - 3)});
     logText.setString("_");
     logText.setFillColor(sf::Color::Green);
     gs.window.draw(logText);
