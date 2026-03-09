@@ -170,7 +170,7 @@ void doGraphics(State &gs)
     gs.window.clear();
     for (std::size_t i = 0; i < lines_to_print; ++i)
     {
-        if (gs.text_view.position.x > gs.log[gs.text_view.position.y + i].size())
+        if (gs.text_view.position.x >= gs.log[gs.text_view.position.y + i].size())
             continue;
 
         logText.setPosition({FONT_WIDTH, static_cast<float>(i * FONT_SIZE) + FONT_SIZE});
