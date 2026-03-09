@@ -26,14 +26,14 @@ struct State
 
     State(unsigned w, unsigned h, const std::string &title)
     {
-        window = sf::RenderWindow(sf::VideoMode({w, h}), title);
-        window.setFramerateLimit(60);
-
         sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
         sf::Vector2i centerPosition(
             (desktop.size.x - w) / 2,
             (desktop.size.y - h) / 2
         );
+
+        window = sf::RenderWindow(sf::VideoMode({w, h}), title);
+        window.setFramerateLimit(60);
         window.setPosition(centerPosition);
 
         log.resize(1, "");
