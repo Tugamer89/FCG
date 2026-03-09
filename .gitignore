@@ -1,0 +1,41 @@
+# =========================
+# Directory di compilazione
+# =========================
+build/
+out/
+bin/
+
+# =========================
+# File generati da CMake
+# =========================
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+
+# =========================
+# Eseguibili specifici del progetto
+# =========================
+main_text_echo
+main_text_echo.exe
+main_text_editor
+main_text_editor.exe
+
+# =========================
+# File di configurazione degli IDE/Editor
+# =========================
+.vscode/
+.idea/
+.vs/
+*.swp
+*.swo
+
+# =========================
+# File di sistema
+# =========================
+.DS_Store
+Thumbs.db
