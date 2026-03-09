@@ -87,7 +87,7 @@ void handle(const sf::Event::Resized &resized, State &gs)
 }
 
 template <typename T>
-void handle(const T &, State &gs)
+void handle(const T &, State &)
 {
     // All unhandled events will end up here
 }
@@ -129,7 +129,7 @@ int main()
     while (gs.window.isOpen()) // main loop
     {
         // event loop and handler through callbacks
-        gs.window.handleEvents([&](const auto &event) { handle(event, gs); });
+        gs.window.handleEvents([&gs](const auto &event) { handle(event, gs); });
 
         // Show log
         doGraphics(gs);
