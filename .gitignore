@@ -28,7 +28,7 @@ main_text_editor.exe
 # =========================
 # File di configurazione degli IDE/Editor
 # =========================
-#.vscode/
+.vscode/
 .idea/
 .vs/
 *.swp
