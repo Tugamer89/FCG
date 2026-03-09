@@ -22,16 +22,22 @@ struct State
     // View of the text buffer
     sf::IntRect text_view;
     // Cursor position in the text buffer
-    sf::Vector2i cursor_pos; 
+    sf::Vector2i cursor_pos{0, 0};
 
-    State(unsigned w, unsigned h, std::string title)
+    State(unsigned w, unsigned h, const std::string &title)
     {
         window = sf::RenderWindow(sf::VideoMode({w, h}), title);
-        // window.setVerticalSyncEnabled(true); // alternative to setFramerateLimit
         window.setFramerateLimit(60);
+
+        sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+        sf::Vector2i centerPosition(
+            (desktop.size.x - w) / 2,
+            (desktop.size.y - h) / 2
+        );
+        window.setPosition(centerPosition);
+
         log.resize(1, "");
         text_view = sf::IntRect({0, 0}, sf::Vector2i(w / FONT_WIDTH - 2, h / FONT_SIZE - 2));
-        cursor_pos = {0, 0};
     }
 
     void adjustView()
@@ -58,12 +64,11 @@ void handle(const sf::Event::Closed &, State &gs)
 
 void handle(const sf::Event::TextEntered &textEnter, State &gs)
 {
-    unsigned last = gs.log.size() - 1;
     if (textEnter.unicode == '\n' || textEnter.unicode == '\r') // enter
     {
         ++gs.cursor_pos.y;
         gs.cursor_pos.x = 0;
-        gs.log.insert(gs.log.begin() + gs.cursor_pos.y, "");
+        gs.log.emplace(gs.log.begin() + gs.cursor_pos.y, "");
     }    
     else if (textEnter.unicode >= ' ' && textEnter.unicode <= '~') // printable char
     {
@@ -109,8 +114,8 @@ void doGraphics(State &gs)
         gs.window.draw(logText);
     }
 
-    logText.setPosition(sf::Vector2f((gs.cursor_pos.x - gs.text_view.position.x + 1) * FONT_WIDTH,
-                                     (gs.cursor_pos.y - gs.text_view.position.y + 1) * FONT_SIZE + 3));
+    logText.setPosition({static_cast<float>((gs.cursor_pos.x - gs.text_view.position.x + 1) * FONT_WIDTH),
+                         static_cast<float>((gs.cursor_pos.y - gs.text_view.position.y + 1) * FONT_SIZE + 3)});
     logText.setString("_");
     logText.setFillColor(sf::Color::Green);
     gs.window.draw(logText);
