@@ -124,6 +124,46 @@ void handle(const sf::Event::Resized &resized, State &gs)
     gs.adjustView();
 }
 
+void moveCursorLeft(State &gs, int speed)
+{
+    if (gs.cursor_pos.x > 0)
+        gs.cursor_pos.x = std::max(0, gs.cursor_pos.x - speed);
+    else if (gs.cursor_pos.y > 0)
+    {
+        --gs.cursor_pos.y;
+        gs.cursor_pos.x = static_cast<int>(gs.log[gs.cursor_pos.y].size());
+    }
+}
+
+void moveCursorRight(State &gs, int speed)
+{
+    if (gs.cursor_pos.x < gs.log[gs.cursor_pos.y].size())
+        gs.cursor_pos.x = std::min(gs.cursor_pos.x + speed, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
+    else if (gs.cursor_pos.y < gs.log.size() - 1)
+    {
+        ++gs.cursor_pos.y;
+        gs.cursor_pos.x = 0;
+    }
+}
+
+void moveCursorUp(State &gs, int speed)
+{
+    if (gs.cursor_pos.y > 0)
+    {
+        gs.cursor_pos.y = std::max(0, gs.cursor_pos.y - speed);
+        gs.cursor_pos.x = std::min(gs.cursor_pos.x, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
+    }
+}
+
+void moveCursorDown(State &gs, int speed)
+{
+    if (gs.cursor_pos.y < gs.log.size() - 1)
+    {
+        gs.cursor_pos.y = std::min(static_cast<int>(gs.log.size() - 1), gs.cursor_pos.y + speed);
+        gs.cursor_pos.x = std::min(gs.cursor_pos.x, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
+    }
+}
+
 void handle(const sf::Event::KeyPressed &keyPressed, State &gs)
 {
     int speed = 1;
@@ -153,35 +193,13 @@ void handle(const sf::Event::KeyPressed &keyPressed, State &gs)
     }
 
     if (keyPressed.code == sf::Keyboard::Key::Left)
-    {
-        if (gs.cursor_pos.x > 0)
-            gs.cursor_pos.x = std::max(0, gs.cursor_pos.x - speed);
-        else if (gs.cursor_pos.y > 0)
-        {
-            --gs.cursor_pos.y;
-            gs.cursor_pos.x = static_cast<int>(gs.log[gs.cursor_pos.y].size());
-        }
-    }
+        moveCursorLeft(gs, speed);
     else if (keyPressed.code == sf::Keyboard::Key::Right)
-    {
-        if (gs.cursor_pos.x < gs.log[gs.cursor_pos.y].size())
-            gs.cursor_pos.x = std::min(gs.cursor_pos.x + speed, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
-        else if (gs.cursor_pos.y < gs.log.size() - 1)
-        {
-            ++gs.cursor_pos.y;
-            gs.cursor_pos.x = 0;
-        }
-    }
-    else if (keyPressed.code == sf::Keyboard::Key::Up && gs.cursor_pos.y > 0)
-    {
-        gs.cursor_pos.y = std::max(0, gs.cursor_pos.y - speed);
-        gs.cursor_pos.x = std::min(gs.cursor_pos.x, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
-    }
-    else if (keyPressed.code == sf::Keyboard::Key::Down && gs.cursor_pos.y < gs.log.size() - 1)
-    {
-        gs.cursor_pos.y = std::min(static_cast<int>(gs.log.size() - 1), gs.cursor_pos.y + speed);
-        gs.cursor_pos.x = std::min(gs.cursor_pos.x, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
-    }
+        moveCursorRight(gs, speed);
+    else if (keyPressed.code == sf::Keyboard::Key::Up)
+        moveCursorUp(gs, speed);
+    else if (keyPressed.code == sf::Keyboard::Key::Down)
+        moveCursorDown(gs, speed);
 
     gs.adjustView();
 }
