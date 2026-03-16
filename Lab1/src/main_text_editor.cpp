@@ -38,8 +38,8 @@ struct State
         );
 
         window = sf::RenderWindow(sf::VideoMode({w, h}), title);
-        window.setVerticalSyncEnabled(true);
         window.setPosition(centerPosition);
+        window.setVerticalSyncEnabled(true);
 
         log.resize(1, "");
         text_view = sf::IntRect({0, 0}, sf::Vector2i(w / FONT_WIDTH - 2, h / FONT_SIZE - 2));
