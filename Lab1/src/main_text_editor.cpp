@@ -99,7 +99,7 @@ void handle(const sf::Event::TextEntered &textEnter, State &gs)
     }
     else if (textEnter.unicode == '\n' || textEnter.unicode == '\r') // enter
     {
-        std::string remainder = gs.log[gs.cursor_pos.y].substr(gs.cursor_pos.x);
+        const std::string remainder = gs.log[gs.cursor_pos.y].substr(gs.cursor_pos.x);
         
         gs.log[gs.cursor_pos.y].erase(gs.cursor_pos.x);
         
