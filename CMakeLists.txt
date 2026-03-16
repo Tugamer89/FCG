@@ -17,4 +17,4 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Laboratori
 add_subdirectory(Lab1)
-# add_subdirectory(Lab2)
+add_subdirectory(Lab2)
