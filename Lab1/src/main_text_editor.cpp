@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <string>
+#include <fstream>
 
 ////////////////////////////////////////////////////////////
 /// GUI State
@@ -125,10 +126,36 @@ void handle(const sf::Event::Resized &resized, State &gs)
 
 void handle(const sf::Event::KeyPressed &keyPressed, State &gs)
 {
+    int speed = 1;
+    
+    if (keyPressed.control)
+    {
+        speed = 10;
+
+        if (keyPressed.code == sf::Keyboard::Key::X)
+        {
+            gs.window.close();
+            return;
+        }
+        else if (keyPressed.code == sf::Keyboard::Key::S)
+        {
+            std::ofstream outFile("output.txt");
+
+            if (!outFile.is_open())
+                return;
+            
+            for (size_t i = 0; i < gs.log.size(); ++i)
+                outFile << gs.log[i] << (i < gs.log.size() - 1 ? "\n" : "");
+
+            outFile.close();
+            return;
+        }
+    }
+
     if (keyPressed.code == sf::Keyboard::Key::Left)
     {
         if (gs.cursor_pos.x > 0)
-            --gs.cursor_pos.x;
+            gs.cursor_pos.x = std::max(0, gs.cursor_pos.x - speed);
         else if (gs.cursor_pos.y > 0)
         {
             --gs.cursor_pos.y;
@@ -138,7 +165,7 @@ void handle(const sf::Event::KeyPressed &keyPressed, State &gs)
     else if (keyPressed.code == sf::Keyboard::Key::Right)
     {
         if (gs.cursor_pos.x < gs.log[gs.cursor_pos.y].size())
-            ++gs.cursor_pos.x;
+            gs.cursor_pos.x = std::min(gs.cursor_pos.x + speed, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
         else if (gs.cursor_pos.y < gs.log.size() - 1)
         {
             ++gs.cursor_pos.y;
@@ -147,12 +174,12 @@ void handle(const sf::Event::KeyPressed &keyPressed, State &gs)
     }
     else if (keyPressed.code == sf::Keyboard::Key::Up && gs.cursor_pos.y > 0)
     {
-        --gs.cursor_pos.y;
+        gs.cursor_pos.y = std::max(0, gs.cursor_pos.y - speed);
         gs.cursor_pos.x = std::min(gs.cursor_pos.x, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
     }
     else if (keyPressed.code == sf::Keyboard::Key::Down && gs.cursor_pos.y < gs.log.size() - 1)
     {
-        ++gs.cursor_pos.y;
+        gs.cursor_pos.y = std::min(static_cast<int>(gs.log.size() - 1), gs.cursor_pos.y + speed);
         gs.cursor_pos.x = std::min(gs.cursor_pos.x, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
     }
 
