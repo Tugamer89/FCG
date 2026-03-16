@@ -23,6 +23,10 @@ struct State
     sf::IntRect text_view;
     // Cursor position in the text buffer
     sf::Vector2i cursor_pos{0, 0};
+    // FPS counter
+    sf::Text fpsText{font, "FPS: 0", FONT_SIZE / 2};
+    sf::Clock fpsClock;
+    int frameCounter = 0;
 
     State(unsigned w, unsigned h, const std::string &title)
     {
@@ -33,29 +37,32 @@ struct State
         );
 
         window = sf::RenderWindow(sf::VideoMode({w, h}), title);
-        window.setFramerateLimit(60);
+        window.setVerticalSyncEnabled(true);
         window.setPosition(centerPosition);
 
         log.resize(1, "");
         text_view = sf::IntRect({0, 0}, sf::Vector2i(w / FONT_WIDTH - 2, h / FONT_SIZE - 2));
+        
+        fpsText.setFillColor(sf::Color::Yellow);
+        fpsText.setPosition({10.f, 10.f});
     }
 
     void adjustView()
     {
-        int cols = std::max(1u, window.getSize().x / FONT_WIDTH - 2);
-        int rows = std::max(1u, window.getSize().y / FONT_SIZE - 2);
+        int cols = std::max(0u, window.getSize().x / FONT_WIDTH - 2);
+        int rows = std::max(0u, window.getSize().y / FONT_SIZE - 2);
         text_view.size = {cols, rows};
         
         if (cursor_pos.x < text_view.position.x) {
             text_view.position.x = cursor_pos.x; // Esce a sx
-        } 
+        }
         else if (cursor_pos.x >= text_view.position.x + text_view.size.x) {
             text_view.position.x = cursor_pos.x - text_view.size.x + 1; // Esce a dx
         }
 
         if (cursor_pos.y < text_view.position.y) {
             text_view.position.y = cursor_pos.y; // Esce in alto
-        } 
+        }
         else if (cursor_pos.y >= text_view.position.y + text_view.size.y) {
             text_view.position.y = cursor_pos.y - text_view.size.y + 1; // Esce in basso
         }
@@ -168,6 +175,8 @@ void doGraphics(State &gs)
     sf::Text logText{gs.font, "", FONT_SIZE};
 
     gs.window.clear();
+
+    // log
     for (std::size_t i = 0; i < lines_to_print; ++i)
     {
         if (gs.text_view.position.x >= gs.log[gs.text_view.position.y + i].size())
@@ -180,11 +189,26 @@ void doGraphics(State &gs)
         gs.window.draw(logText);
     }
 
+    // cursor
     logText.setPosition({static_cast<float>((gs.cursor_pos.x - gs.text_view.position.x + 1) * FONT_WIDTH),
                          static_cast<float>((gs.cursor_pos.y - gs.text_view.position.y + 1) * FONT_SIZE - 3)});
     logText.setString("_");
     logText.setFillColor(sf::Color::Green);
     gs.window.draw(logText);
+
+    // fps
+    ++gs.frameCounter;
+    
+    if (gs.fpsClock.getElapsedTime().asSeconds() >= .05f)
+    {
+        gs.fpsText.setString("FPS: " + std::to_string(
+            static_cast<int>(static_cast<float>(gs.frameCounter) / gs.fpsClock.getElapsedTime().asSeconds()
+        )));
+        gs.frameCounter = 0;
+        gs.fpsClock.restart();
+    }
+
+    gs.window.draw(gs.fpsText);
 
     gs.window.display();
 }
