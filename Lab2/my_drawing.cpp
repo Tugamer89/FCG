@@ -21,16 +21,6 @@ const sf::Color GRAY(128, 128, 128, 255);
 const sf::Color LIGHT_GRAY(170, 170, 170, 255);
 const sf::Color DARK_GRAY(85, 85, 85, 255);
 
-const std::vector<sf::Color> colors = {
-    sf::Color::White,
-    sf::Color::Red,
-    sf::Color::Green,
-    sf::Color::Blue,
-    sf::Color::Cyan,
-    sf::Color::Yellow,
-    sf::Color::Magenta
-};
-
 ///
 ////////////////////////////////////////////////////////////
 
@@ -51,6 +41,16 @@ struct Shape
 
 struct State
 {
+    const std::vector<sf::Color> colors = {
+        sf::Color::White,
+        sf::Color::Red,
+        sf::Color::Green,
+        sf::Color::Blue,
+        sf::Color::Cyan,
+        sf::Color::Yellow,
+        sf::Color::Magenta
+    };
+
     sf::RenderWindow window;
     float menu_height = 50;
 
@@ -93,39 +93,44 @@ void handle(const sf::Event::KeyPressed &keyPressed, State &gs)
     // TODO
 }
 
+void handle(const sf::Event::MouseMoved &mouseMoved, State &gs)
+{
+    // TODO
+}
+
 void handle(const sf::Event::MouseButtonPressed &mouseBP, State &gs)
 {
-    float button_size = gs.menu_height;
-    sf::FloatRect button_area({0.f, 0.f}, {button_size, button_size});
     auto mouse_pos = static_cast<sf::Vector2f>(mouseBP.position);
-
-    for (size_t i = 0; i < 5; ++i)
-    {
-        button_area.position = {button_size * static_cast<float>(i), 0.f};
-
-        if (button_area.contains(mouse_pos))
-        {
-            gs.active_shape = i;
-            return;
-        }
-    }
-
-    for (size_t i = 0; i < colors.size(); ++i)
-    {
-        button_area.position = {static_cast<float>(gs.window.getSize().x) - button_size * (static_cast<float>(i) + 1), 0.f};
-
-        if (button_area.contains(mouse_pos))
-        {
-            gs.active_color = colors.size() - i - 1;
-            return;
-        }
-    }
-
+    
     if (mouse_pos.y < gs.menu_height)
-        return;
+    {
+        float button_size = gs.menu_height;
+        sf::FloatRect button_area({0.f, 0.f}, {button_size, button_size});
+        
+        for (size_t i = 0; i < 5; ++i)
+        {
+            button_area.position = {button_size * static_cast<float>(i), 0.f};
 
-    if (mouseBP.button == sf::Mouse::Button::Left)
-        gs.shapes.emplace_back(gs.active_shape, gs.active_color, mouse_pos);
+            if (button_area.contains(mouse_pos))
+            {
+                gs.active_shape = i;
+                return;
+            }
+        }
+
+        for (size_t i = 0; i < gs.colors.size(); ++i)
+        {
+            button_area.position = {static_cast<float>(gs.window.getSize().x) - button_size * (static_cast<float>(i) + 1), 0.f};
+
+            if (button_area.contains(mouse_pos))
+            {
+                gs.active_color = gs.colors.size() - i - 1;
+                return;
+            }
+        }
+    }
+    else if (mouseBP.button == sf::Mouse::Button::Left)
+        gs.shapes.emplace_back(gs.active_shape, gs.active_color, mouse_pos);   
 }
 
 void handle(const sf::Event::MouseButtonReleased &mouseBP, State &gs)
@@ -174,12 +179,12 @@ void doGUI(State &gs)
         gs.window.draw(shape);
     }
 
-    for (size_t i = 0; i < colors.size(); ++i)
+    for (size_t i = 0; i < gs.colors.size(); ++i)
     {
-        size_t color_index = colors.size() - i - 1;
+        size_t color_index = gs.colors.size() - i - 1;
 
         button.setOutlineColor(color_index == gs.active_color ? DARK_GRAY : LIGHT_GRAY);
-        button.setFillColor(colors[color_index]);
+        button.setFillColor(gs.colors[color_index]);
         button.setPosition({static_cast<float>(gs.window.getSize().x) - button_size * (static_cast<float>(i) + 1), 0.f});
         gs.window.draw(button);
     }
@@ -198,7 +203,7 @@ void doGraphics(State &gs)
 
         drawable_shape.setRadius(shape_radius);
         drawable_shape.setPointCount(shape.type > 0 ? shape.type + 2 : 30);
-        drawable_shape.setFillColor(colors[shape.color]);
+        drawable_shape.setFillColor(gs.colors[shape.color]);
         drawable_shape.setOrigin({shape_radius, shape_radius});
         drawable_shape.setPosition(shape.position);
         gs.window.draw(drawable_shape);
