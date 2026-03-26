@@ -7,6 +7,7 @@
 #include <string>
 #include <iostream>
 #include <math.h>
+#include <float.h>
 
 ////////////////////////////////////////////////////////////
 /// Utility
@@ -54,8 +55,11 @@ struct State
     sf::RenderWindow window;
     float menu_height = 50;
 
+    sf::Vector2f mouse_pos;
+
     size_t active_shape = 0;
     size_t active_color = 0;
+    long long selected_shape = -1;
 
     std::vector<Shape> shapes;
 
@@ -83,59 +87,86 @@ void handle(const sf::Event::Closed &, State &gs)
     gs.window.close();
 }
 
-void handle(const sf::Event::TextEntered &textEnter, State &gs)
-{
-    // TODO
-}
-
 void handle(const sf::Event::KeyPressed &keyPressed, State &gs)
 {
-    // TODO
+    if (keyPressed.code == sf::Keyboard::Key::Escape)
+        gs.window.close();
+    
+    else if (gs.selected_shape != -1 && (keyPressed.code == sf::Keyboard::Key::Delete ||
+                                         keyPressed.code == sf::Keyboard::Key::Backspace))
+    {
+        gs.shapes.erase(gs.shapes.begin() + gs.selected_shape);
+        gs.selected_shape = -1;
+    }
 }
 
 void handle(const sf::Event::MouseMoved &mouseMoved, State &gs)
 {
-    // TODO
+    if (gs.selected_shape == -1)
+        return;
+
+    auto mouse_pos = static_cast<sf::Vector2f>(mouseMoved.position);
+    sf::Vector2f offset = mouse_pos - gs.mouse_pos;
+
+    gs.shapes[gs.selected_shape].position += offset;
+    gs.mouse_pos = mouse_pos;
 }
 
 void handle(const sf::Event::MouseButtonPressed &mouseBP, State &gs)
 {
+    auto wSize = static_cast<sf::Vector2f>(gs.window.getSize());
     auto mouse_pos = static_cast<sf::Vector2f>(mouseBP.position);
-    
-    if (mouse_pos.y < gs.menu_height)
-    {
-        float button_size = gs.menu_height;
-        sf::FloatRect button_area({0.f, 0.f}, {button_size, button_size});
-        
-        for (size_t i = 0; i < 5; ++i)
-        {
-            button_area.position = {button_size * static_cast<float>(i), 0.f};
 
-            if (button_area.contains(mouse_pos))
-            {
-                gs.active_shape = i;
-                return;
-            }
+    sf::FloatRect menuArea({0.f, 0.f}, {wSize.x, gs.menu_height});
+    sf::FloatRect canvasArea({0.f, gs.menu_height}, wSize - sf::Vector2f{0.f, gs.menu_height});
+
+    if (menuArea.contains(mouse_pos))
+    {   // Menu
+        float button_size = gs.menu_height;
+
+        auto index = static_cast<size_t>(mouse_pos.x / button_size);
+
+        if (index < 5)
+        {
+            gs.active_shape = index;
+            return;
         }
 
-        for (size_t i = 0; i < gs.colors.size(); ++i)
-        {
-            button_area.position = {static_cast<float>(gs.window.getSize().x) - button_size * (static_cast<float>(i) + 1), 0.f};
+        index = static_cast<size_t>((wSize.x - mouse_pos.x) / button_size);
 
-            if (button_area.contains(mouse_pos))
+        if (index < gs.colors.size())
+        {
+            gs.active_color = gs.colors.size() - index - 1;
+            return;
+        }
+    }
+    else if (!canvasArea.contains(mouse_pos))
+        return;
+    // Canvas
+    else if (mouseBP.button == sf::Mouse::Button::Left)
+        gs.shapes.emplace_back(gs.active_shape, gs.active_color, mouse_pos);
+    else if (mouseBP.button == sf::Mouse::Button::Right)
+    {
+        auto last_dist = DBL_MAX;
+        gs.mouse_pos = mouse_pos;
+
+        for (size_t i = 0; i < gs.shapes.size(); ++i)
+        {
+            double distance = dist(gs.shapes[i].position, mouse_pos);
+
+            if (distance < gs.shapes[i].size && distance < last_dist)
             {
-                gs.active_color = gs.colors.size() - i - 1;
-                return;
+                last_dist = distance;
+                gs.selected_shape = i;
             }
         }
     }
-    else if (mouseBP.button == sf::Mouse::Button::Left)
-        gs.shapes.emplace_back(gs.active_shape, gs.active_color, mouse_pos);   
 }
 
 void handle(const sf::Event::MouseButtonReleased &mouseBP, State &gs)
 {
-    // TODO
+    if (mouseBP.button == sf::Mouse::Button::Right)
+        gs.selected_shape = -1;
 }
 
 void handle(const sf::Event::Resized &resized, State &gs)
@@ -145,7 +176,7 @@ void handle(const sf::Event::Resized &resized, State &gs)
 }
 
 template <typename T>
-void handle(const T &, State &gs)
+void handle(const T &, State &)
 {
     // All unhandled events will end up here
 }
@@ -197,8 +228,9 @@ void doGraphics(State &gs)
 
     sf::CircleShape drawable_shape(0.f);
 
-    for (const auto &shape : gs.shapes)
+    for (size_t i = 0; i < gs.shapes.size(); ++i)
     {
+        const auto &shape = gs.shapes[i];
         float shape_radius = shape.size * 3.f / 10.f;
 
         drawable_shape.setRadius(shape_radius);
@@ -206,6 +238,15 @@ void doGraphics(State &gs)
         drawable_shape.setFillColor(gs.colors[shape.color]);
         drawable_shape.setOrigin({shape_radius, shape_radius});
         drawable_shape.setPosition(shape.position);
+
+        if (i == gs.selected_shape)
+        {
+            drawable_shape.setOutlineColor(GRAY);
+            drawable_shape.setOutlineThickness(3.f);
+        }
+        else
+            drawable_shape.setOutlineThickness(0.f);
+
         gs.window.draw(drawable_shape);
     }
 
