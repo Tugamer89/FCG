@@ -23,7 +23,6 @@ const sf::Color GRAY(128, 128, 128, 255);
 const sf::Color LIGHT_GRAY(170, 170, 170, 255);
 const sf::Color DARK_GRAY(85, 85, 85, 255);
 
-constexpr const float SHAPE_SCALE = 0.3f;
 
 ///
 ////////////////////////////////////////////////////////////
@@ -129,7 +128,7 @@ void handle(const sf::Event::MouseMoved &mouseMoved, State &gs)
     }
 
     const sf::Vector2f offset = mouse_pos - gs.mouse_pos;
-    const float radius = selected_shape.size * SHAPE_SCALE;
+    const float radius = selected_shape.size / 2.f;
     
     gs.mouse_pos = mouse_pos;
     selected_shape.position = gs.enforceTopLeftBounds(selected_shape.position + offset, radius);
@@ -168,7 +167,7 @@ void handle(const sf::Event::MouseButtonPressed &mouseBP, State &gs)
     // Canvas
     else if (mouseBP.button == sf::Mouse::Button::Left)
     {
-        const float radius = Shape().size * SHAPE_SCALE;
+        const float radius = Shape().size / 2.f;
         sf::Vector2f spawn_pos = gs.enforceTopLeftBounds(mouse_pos, radius);
 
         gs.shapes.emplace_back(gs.active_shape, gs.active_color, spawn_pos);
@@ -182,7 +181,7 @@ void handle(const sf::Event::MouseButtonPressed &mouseBP, State &gs)
         {
             double distance = dist(gs.shapes[i].position, mouse_pos);
 
-            if (distance < gs.shapes[i].size * SHAPE_SCALE && distance < last_dist)
+            if (distance < gs.shapes[i].size / 2.f && distance < last_dist)
             {
                 last_dist = distance;
                 gs.selected_shape = i;
@@ -206,12 +205,12 @@ void handle(const sf::Event::MouseWheelScrolled &mouseWheelScrolled, State &gs)
     const auto wSize = static_cast<sf::Vector2f>(gs.window.getSize());
     
     if (const float max_radius = std::min(wSize.x / 2.f, (wSize.y - gs.menu_height) / 2.f);
-        selected_shape.size * SHAPE_SCALE > max_radius)
+        selected_shape.size > max_radius * 2.f)
     {
-        selected_shape.size = max_radius / SHAPE_SCALE;
+        selected_shape.size = max_radius / 2.f;
     }
 
-    const float radius = selected_shape.size * SHAPE_SCALE;
+    const float radius = selected_shape.size / 2.f;
     selected_shape.position = gs.enforceTopLeftBounds(selected_shape.position, radius);
 }
 
@@ -240,7 +239,7 @@ void handle(const T &, State &)
 void doGUI(State &gs)
 {
     float button_size = gs.menu_height;
-    float shape_radius = button_size * SHAPE_SCALE;
+    float shape_radius = button_size * 0.3f;
 
     sf::RectangleShape button({button_size, button_size});
     button.setFillColor(sf::Color::Transparent);
@@ -285,7 +284,7 @@ void doGraphics(State &gs)
     for (size_t i = 0; i < gs.shapes.size(); ++i)
     {
         const Shape &shape = gs.shapes[i];
-        const float shape_radius = shape.size * SHAPE_SCALE;
+        const float shape_radius = shape.size / 2.f;
 
         drawable_shape.setRadius(shape_radius);
         drawable_shape.setPointCount(shape.type > 0 ? shape.type + 2 : 30);
