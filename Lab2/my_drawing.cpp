@@ -19,8 +19,7 @@ double dist(sf::Vector2<T1> p1, sf::Vector2<T2> p2)
     return sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
 }
 
-const sf::Color GRAY(128, 128, 128, 255);
-const sf::Color LIGHT_GRAY(170, 170, 170, 255);
+const sf::Color LIGHT_GRAY(180, 180, 180, 255);
 const sf::Color DARK_GRAY(85, 85, 85, 255);
 
 
@@ -294,8 +293,8 @@ void doGraphics(State &gs)
 
         if (i == gs.selected_shape)
         {
-            drawable_shape.setOutlineColor(GRAY);
-            drawable_shape.setOutlineThickness(3.f);
+            drawable_shape.setOutlineColor(LIGHT_GRAY);
+            drawable_shape.setOutlineThickness(-3.f);
         }
         else
             drawable_shape.setOutlineThickness(0.f);
