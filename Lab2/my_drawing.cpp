@@ -118,19 +118,10 @@ void handle(const sf::Event::MouseMoved &mouseMoved, State &gs)
 
     Shape &selected_shape = gs.shapes[gs.selected_shape];
     const auto mouse_pos = static_cast<sf::Vector2f>(mouseMoved.position);
-    const auto wSize = static_cast<sf::Vector2f>(gs.window.getSize());
-
-    if (const sf::FloatRect canvas_area({0.f, gs.menu_height}, wSize - sf::Vector2f{0.f, gs.menu_height});
-        !canvas_area.contains(mouse_pos))
-    {
-        return;
-    }
-
     const sf::Vector2f offset = mouse_pos - gs.mouse_pos;
-    const float radius = selected_shape.size / 2.f;
-    
+
     gs.mouse_pos = mouse_pos;
-    selected_shape.position = gs.enforceTopLeftBounds(selected_shape.position + offset, radius);
+    selected_shape.position = gs.enforceTopLeftBounds(selected_shape.position + offset, selected_shape.size / 2.f);
 }
 
 void handle(const sf::Event::MouseButtonPressed &mouseBP, State &gs)
@@ -202,12 +193,8 @@ void handle(const sf::Event::MouseWheelScrolled &mouseWheelScrolled, State &gs)
         selected_shape.size /= 1.1f;
     
     const auto wSize = static_cast<sf::Vector2f>(gs.window.getSize());
-    
-    if (const float max_radius = std::min(wSize.x / 2.f, (wSize.y - gs.menu_height) / 2.f);
-        selected_shape.size > max_radius * 2.f)
-    {
-        selected_shape.size = max_radius / 2.f;
-    }
+    const float max_radius = std::min(wSize.x / 2.f, (wSize.y - gs.menu_height) / 2.f);
+    selected_shape.size = std::clamp(selected_shape.size, 10.f, max_radius * 2.f);
 
     const float radius = selected_shape.size / 2.f;
     selected_shape.position = gs.enforceTopLeftBounds(selected_shape.position, radius);
