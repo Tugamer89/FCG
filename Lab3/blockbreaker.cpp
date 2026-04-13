@@ -67,7 +67,7 @@ struct State
 Ball::Ball()
     : radius(ball_radius)
     , pos({window_width/2.f, window_height - paddle_size.y - ball_radius})
-    , vel({0.f, -100.f})
+    , vel({0.f, 0.f})
     , texture(ball_png, ball_png_len)
 {
     texture.setSmooth(true);
@@ -108,6 +108,15 @@ void Paddle::draw(sf::RenderWindow& window)
 
 void State::draw(sf::RenderWindow& window)
 {
+    if (ball.vel == sf::Vector2f{0.f, 0.f})
+    {
+        sf::Font font("resources/tuffy.ttf");
+        sf::Text text(font, "Press space to start", 24);
+        text.setFillColor(sf::Color::White);
+        text.setPosition({(window_width - text.getLocalBounds().size.x)/2.f, (window_height - text.getLocalBounds().size.y)/2.f});
+        window.draw(text);
+    }
+
     ball.draw(window);
     paddle.draw(window);
 }
@@ -151,10 +160,12 @@ void handle_resize(const sf::Event::Resized& resized, sf::RenderWindow& window)
     window.setSize(ws);
 }
 
-void handle_key_pressed(const sf::Event::KeyPressed &keyPressed, sf::RenderWindow& window)
+void handle_key_pressed(const sf::Event::KeyPressed &keyPressed, sf::RenderWindow& window, State& gs)
 {
     if (keyPressed.code == sf::Keyboard::Key::Escape)
         window.close();
+    if (keyPressed.code == sf::Keyboard::Key::Space)
+        gs.ball.vel = {0.f, -100.f};
 }
 
 
@@ -183,7 +194,7 @@ int main()
         window.handleEvents(
             [&window](const sf::Event::Closed&) { handle_close(window); },
             [&window](const sf::Event::Resized& event) { handle_resize(event, window); },
-            [&window](const sf::Event::KeyPressed& event) { handle_key_pressed(event, window); }
+            [&window, &state](const sf::Event::KeyPressed& event) { handle_key_pressed(event, window, state); }
         );
 
         // display
