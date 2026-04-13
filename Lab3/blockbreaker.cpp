@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include "textures.hpp"
 
 
 
@@ -14,6 +15,7 @@ const float max_frame_rate = 60;
 
 // ball
 const float ball_radius = 10.f;
+
 // paddle
 const sf::Vector2f paddle_size = {100.f, 16.f};
 
@@ -27,15 +29,19 @@ struct Ball
 {
     float radius;
     sf::Vector2f pos;
+    sf::Vector2f vel;
+    sf::Texture texture;
 
     Ball();
     void draw(sf::RenderWindow& window);
+    void update(float dt);
 };
 
 struct Paddle
 {
     sf::Vector2f size;
     sf::Vector2f pos;
+    sf::Texture texture;
     
     Paddle();
     void draw(sf::RenderWindow& window);
@@ -45,9 +51,11 @@ struct State
 {
     Ball ball;
     Paddle paddle;
+    sf::Clock clock;
 
     State();
     void draw(sf::RenderWindow& window);
+    void update();
 };
 
 
@@ -59,12 +67,19 @@ struct State
 Ball::Ball()
     : radius(ball_radius)
     , pos({window_width/2.f, window_height - paddle_size.y - ball_radius})
-{}
+    , vel({0.f, -100.f})
+    , texture(ball_png, ball_png_len)
+{
+    texture.setSmooth(true);
+}
 
 Paddle::Paddle()
     : size(paddle_size)
     , pos({(window_width - paddle_size.x)/2.f, window_height - paddle_size.y})
-{}
+    , texture(paddle_png, paddle_png_len)
+{
+    texture.setSmooth(true);
+}
 
 State::State() {}
 
@@ -79,7 +94,7 @@ void Ball::draw(sf::RenderWindow& window)
     sf::CircleShape shape(radius);
     shape.setOrigin({radius, radius});
     shape.setPosition(pos);
-    shape.setFillColor(sf::Color::White);
+    shape.setTexture(&texture);
     window.draw(shape);
 }
 
@@ -87,7 +102,7 @@ void Paddle::draw(sf::RenderWindow& window)
 {
     sf::RectangleShape shape(size);
     shape.setPosition(pos);
-    shape.setFillColor(sf::Color::White);
+    shape.setTexture(&texture);
     window.draw(shape);
 }
 
@@ -95,6 +110,22 @@ void State::draw(sf::RenderWindow& window)
 {
     ball.draw(window);
     paddle.draw(window);
+}
+
+
+
+////////////
+// Update //
+////////////
+
+void Ball::update(float dt)
+{
+    pos += vel * dt;
+}
+
+void State::update()
+{
+    ball.update(clock.restart().asSeconds());
 }
 
 
@@ -150,13 +181,14 @@ int main()
     {
         // events
         window.handleEvents(
-                            [&window](const sf::Event::Closed&) { handle_close(window); },
-                            [&window](const sf::Event::Resized& event) { handle_resize(event, window); },
-                            [&window](const sf::Event::KeyPressed& event) { handle_key_pressed(event, window); }
+            [&window](const sf::Event::Closed&) { handle_close(window); },
+            [&window](const sf::Event::Resized& event) { handle_resize(event, window); },
+            [&window](const sf::Event::KeyPressed& event) { handle_key_pressed(event, window); }
         );
 
         // display
         window.clear(sf::Color::Black);
+        state.update();
         state.draw(window);
         window.display();
     }
