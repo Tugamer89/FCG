@@ -8,10 +8,10 @@
 //////////////////////
 
 // window
-const char* window_title = "blockbreaker";
+const std::string window_title = "blockbreaker";
 const unsigned window_width = 800;
 const unsigned window_height = 600;
-const float max_frame_rate = 60;
+const unsigned max_frame_rate = 60;
 
 // ball
 const float ball_radius = 10.f;
@@ -27,24 +27,24 @@ const sf::Vector2f paddle_size = {100.f, 16.f};
 
 struct Ball
 {
-    float radius;
-    sf::Vector2f pos;
-    sf::Vector2f vel;
-    sf::Texture texture;
+    float radius = ball_radius;
+    sf::Vector2f pos = {window_width/2.f, window_height - paddle_size.y - ball_radius};
+    sf::Vector2f vel = {0.f, 0.f};
+    sf::Texture texture = sf::Texture(ball_png, ball_png_len);
 
-    Ball();
-    void draw(sf::RenderWindow& window);
+    Ball() = default;
+    void draw(sf::RenderWindow& window) const;
     void update(float dt);
 };
 
 struct Paddle
 {
-    sf::Vector2f size;
-    sf::Vector2f pos;
-    sf::Texture texture;
-    
-    Paddle();
-    void draw(sf::RenderWindow& window);
+    sf::Vector2f size = paddle_size;
+    sf::Vector2f pos = {(window_width - paddle_size.x)/2.f, window_height - paddle_size.y};
+    sf::Texture texture = sf::Texture(paddle_png, paddle_png_len);
+
+    Paddle() = default;
+    void draw(sf::RenderWindow& window) const;
 };
 
 struct State
@@ -53,35 +53,10 @@ struct State
     Paddle paddle;
     sf::Clock clock;
 
-    State();
-    void draw(sf::RenderWindow& window);
+    State() = default;
+    void draw(sf::RenderWindow& window) const;
     void update();
 };
-
-
-
-//////////////////
-// Constructors //
-//////////////////
-
-Ball::Ball()
-    : radius(ball_radius)
-    , pos({window_width/2.f, window_height - paddle_size.y - ball_radius})
-    , vel({0.f, 0.f})
-    , texture(ball_png, ball_png_len)
-{
-    texture.setSmooth(true);
-}
-
-Paddle::Paddle()
-    : size(paddle_size)
-    , pos({(window_width - paddle_size.x)/2.f, window_height - paddle_size.y})
-    , texture(paddle_png, paddle_png_len)
-{
-    texture.setSmooth(true);
-}
-
-State::State() {}
 
 
 
@@ -89,7 +64,7 @@ State::State() {}
 // Draw //
 //////////
 
-void Ball::draw(sf::RenderWindow& window)
+void Ball::draw(sf::RenderWindow& window) const
 {
     sf::CircleShape shape(radius);
     shape.setOrigin({radius, radius});
@@ -98,7 +73,7 @@ void Ball::draw(sf::RenderWindow& window)
     window.draw(shape);
 }
 
-void Paddle::draw(sf::RenderWindow& window)
+void Paddle::draw(sf::RenderWindow& window) const
 {
     sf::RectangleShape shape(size);
     shape.setPosition(pos);
@@ -106,7 +81,7 @@ void Paddle::draw(sf::RenderWindow& window)
     window.draw(shape);
 }
 
-void State::draw(sf::RenderWindow& window)
+void State::draw(sf::RenderWindow& window) const
 {
     if (ball.vel == sf::Vector2f{0.f, 0.f})
     {
@@ -152,11 +127,10 @@ void handle_resize(const sf::Event::Resized& resized, sf::RenderWindow& window)
 {   // constrain aspect ratio and map always the same portion of the world
     float aspect = static_cast<float>(window_width)/static_cast<float>(window_height);
     sf::Vector2u ws = resized.size;
-    float new_aspect = static_cast<float>(ws.x)/static_cast<float>(ws.y);
-    if (new_aspect < aspect)
-        ws = {ws.x,static_cast<unsigned>(ws.x/aspect)};
+    if (static_cast<float>(ws.x)/static_cast<float>(ws.y) < aspect)
+        ws = {ws.x,ws.x/static_cast<unsigned>(aspect)};
     else
-        ws = {static_cast<unsigned>(ws.y*aspect),ws.y};
+        ws = {ws.y*static_cast<unsigned>(aspect),ws.y};
     window.setSize(ws);
 }
 
