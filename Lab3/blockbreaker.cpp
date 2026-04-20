@@ -20,7 +20,7 @@ const sf::Angle ball_initial_angle = sf::degrees(-60.f);
 
 // paddle
 const sf::Vector2f paddle_size = {100.f, 16.f};
-const float paddle_initial_speed = 600.f;
+const float paddle_initial_speed = 600.f; 
 
 
 
@@ -46,17 +46,21 @@ sf::Angle reflect_vertical(sf::Angle angle)
 // Classes //
 /////////////
 
+struct Ball;
+
 struct Paddle
 {
     sf::Vector2f size = paddle_size;
     sf::Vector2f pos = {(window_width - paddle_size.x)/2.f, window_height - paddle_size.y};
-    float speed = paddle_initial_speed;
+    float speed = paddle_initial_speed; 
     sf::Texture texture = sf::Texture(paddle_png, paddle_png_len);
 
     Paddle() = default;
     void draw(sf::RenderWindow& window) const;
     void move_left(float dt);
     void move_right(float dt);
+    bool hit(const Ball& ball) const;
+    void strike(Ball& ball) const;
 };
 
 struct Ball
@@ -69,7 +73,7 @@ struct Ball
 
     Ball() = default;
     void draw(sf::RenderWindow& window) const;
-    void move(float dt, const Paddle& paddle);
+    void move(float dt);
 };
 
 struct State
@@ -77,14 +81,16 @@ struct State
     Ball ball;
     Paddle paddle;
     sf::Clock clock;
-    
-    bool pause = true;
+    bool pause = true; 
     bool move_paddle_left = false;
     bool move_paddle_right = false;
 
     State() = default;
     void draw(sf::RenderWindow& window) const;
     void update();
+    void restart();
+    void field_limits();
+    void collisions();
 };
 
 
@@ -127,73 +133,116 @@ void State::draw(sf::RenderWindow& window) const
 
 
 
-//////////
-// Move //
-//////////
+////////////
+// Update //
+////////////
 
 void Paddle::move_left(float dt)
 {
     pos.x -= speed * dt;
-    pos.x = std::max(pos.x, 0.f);
 }
 
 void Paddle::move_right(float dt)
 {
     pos.x += speed * dt;
-    pos.x = std::min(pos.x, static_cast<float>(window_width) - size.x);
 }
 
+bool Paddle::hit(const Ball& ball) const
+{
+    if (sf::Vector2f(1.f, ball.angle).y < 0.f) return false;
 
+    return ball.pos.y + ball.radius >= pos.y &&
+           ball.pos.y - ball.radius <= pos.y + size.y &&
+           ball.pos.x + ball.radius >= pos.x &&
+           ball.pos.x - ball.radius <= pos.x + size.x;
+}
 
-////////////
-// Update //
-////////////
+void Paddle::strike(Ball& ball) const
+{
+    if (!hit(ball)) return;
 
-void Ball::move(float dt, const Paddle& paddle)
+    float paddle_center_x = pos.x + size.x / 2.f;
+    float hit_offset = ball.pos.x - paddle_center_x;
+    float normalized_offset = hit_offset / (size.x / 2.f);
+    normalized_offset = std::clamp(normalized_offset, -1.f, 1.f);
+
+    const float MAX_BOUNCE_ANGLE = sf::degrees(60.f).asRadians(); 
+    float bounce_angle = normalized_offset * MAX_BOUNCE_ANGLE;
+
+    sf::Vector2f new_dir(std::sin(bounce_angle), -std::cos(bounce_angle));
+    ball.angle = new_dir.angle();
+
+    float paddle_center_y = pos.y + size.y / 2.f;
+    
+    if (ball.pos.y > paddle_center_y) 
+    {
+        ball.angle = reflect_vertical(ball.angle);
+    }
+    else 
+    {
+        ball.pos.y = pos.y - ball.radius;
+    }
+}
+
+void Ball::move(float dt)
 {
     pos += sf::Vector2f(speed * dt, angle);
+}
 
-    if (pos.x - radius < 0.f)
+void State::restart()
+{
+    pause = true;
+    ball.speed = ball_initial_speed;
+    ball.angle = ball_initial_angle;
+    ball.pos = {window_width/2.f, window_height - paddle_size.y - ball_radius};
+    paddle.pos = {(window_width - paddle_size.x)/2.f, window_height - paddle_size.y};
+    
+    move_paddle_left = false;
+    move_paddle_right = false;
+}
+
+void State::field_limits()
+{
+    // Correzione bordi racchetta
+    if (paddle.pos.x < 0.f) 
+        paddle.pos.x = 0.f;
+    if (paddle.pos.x > window_width - paddle.size.x) 
+        paddle.pos.x = window_width - paddle.size.x;
+
+    // Componenti della traiettoria pallina per collisioni robuste
+    sf::Vector2f ball_dir(1.f, ball.angle);
+
+    // Bordo Sinistro
+    if (ball.pos.x - ball.radius < 0.f && ball_dir.x < 0.f)
     {
-        pos.x = radius;
-        angle = reflect_horizontal(angle);
+        ball.pos.x = ball.radius;
+        ball.angle = reflect_horizontal(ball.angle);
     }
-    else if (pos.x + radius > window_width)
+    // Bordo Destro
+    else if (ball.pos.x + ball.radius > window_width && ball_dir.x > 0.f)
     {
-        pos.x = window_width - radius;
-        angle = reflect_horizontal(angle);
+        ball.pos.x = window_width - ball.radius;
+        ball.angle = reflect_horizontal(ball.angle);
     }
 
-    if (pos.y - radius < 0.f)
+    // Soffitto
+    if (ball.pos.y - ball.radius < 0.f && ball_dir.y < 0.f)
     {
-        pos.y = radius;
-        angle = reflect_vertical(angle);
+        ball.pos.y = ball.radius;
+        ball.angle = reflect_vertical(ball.angle);
     }
 
-    if (pos.y + radius >= paddle.pos.y &&
-        pos.x >= paddle.pos.x &&
-        pos.x <= paddle.pos.x + paddle.size.x)
+    // Pavimento: Riavvio del livello
+    if (ball.pos.y + ball.radius > window_height)
     {
-        // Trova il centro del paddle e calcola la distanza dell'impatto dal centro
-        float paddle_center_x = paddle.pos.x + paddle.size.x / 2.f;
-        float hit_offset = pos.x - paddle_center_x;
-
-        // Normalizza l'offset
-        float normalized_offset = hit_offset / (paddle.size.x / 2.f);
-        normalized_offset = std::clamp(normalized_offset, -1.f, 1.f);
-
-        // Calcola l'angolo di rimbalzo in radianti (0 dritto in alto)
-        const float MAX_BOUNCE_ANGLE = sf::degrees(60.f).asRadians(); 
-        float bounce_angle = normalized_offset * MAX_BOUNCE_ANGLE;
-
-        // Convertiamo il bounce angle direzionale in un sf::Angle assegnabile.
-        // Y è negativa perché in SFML 0 è in alto.
-        sf::Vector2f new_dir(std::sin(bounce_angle), -std::cos(bounce_angle));
-        angle = new_dir.angle();
-
-        // Risolvi compenetrazione
-        pos.y = paddle.pos.y - radius;
+        restart();
     }
+}
+
+void State::collisions()
+{
+    field_limits();
+    paddle.strike(ball);
 }
 
 void State::update()
@@ -203,24 +252,12 @@ void State::update()
 
     float dt = clock.restart().asSeconds();
 
-    if (move_paddle_left)
-        paddle.move_left(dt);
-    if (move_paddle_right)
-        paddle.move_right(dt);
+    if (move_paddle_left) paddle.move_left(dt);
+    if (move_paddle_right) paddle.move_right(dt);
 
-    ball.move(dt, paddle);
-
-    if (ball.pos.y + ball.radius > window_height)
-    {
-        pause = true;
-        ball.speed = ball_initial_speed;
-        ball.angle = ball_initial_angle;
-        ball.pos = {window_width/2.f, window_height - paddle_size.y - ball_radius};
-        paddle.pos = {(window_width - paddle_size.x)/2.f, window_height - paddle_size.y};
-        
-        move_paddle_left = false;
-        move_paddle_right = false;
-    }
+    ball.move(dt);
+    
+    collisions();
 }
 
 
