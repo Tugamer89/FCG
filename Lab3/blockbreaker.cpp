@@ -11,12 +11,15 @@
 const std::string window_title = "blockbreaker";
 const unsigned window_width = 800;
 const unsigned window_height = 600;
-const unsigned max_frame_rate = 60;
+const unsigned max_frame_rate = 1200;
 
 // ball
 const float ball_radius = 10.f;
 const float ball_initial_speed = 500.f;
 const sf::Angle ball_initial_angle = sf::degrees(-60.f);
+
+const float ball_speed_increment = 25.f;
+const float ball_max_speed = 1200.f;
 
 // paddle
 const sf::Vector2f paddle_size = {100.f, 16.f};
@@ -42,6 +45,8 @@ sf::Angle reflect_vertical(sf::Angle angle)
     return v.angle();
 }
 
+
+
 /////////////
 // Classes //
 /////////////
@@ -55,12 +60,12 @@ struct Paddle
     float speed = paddle_initial_speed; 
     sf::Texture texture = sf::Texture(paddle_png, paddle_png_len);
 
-    Paddle() = default;
+    Paddle() { texture.setSmooth(true); }
     void draw(sf::RenderWindow& window) const;
     void move_left(float dt);
     void move_right(float dt);
     bool hit(const Ball& ball) const;
-    void strike(Ball& ball) const;
+    bool strike(Ball& ball) const;
 };
 
 struct Ball
@@ -71,7 +76,7 @@ struct Ball
     sf::Angle angle = ball_initial_angle;
     sf::Texture texture = sf::Texture(ball_png, ball_png_len);
 
-    Ball() = default;
+    Ball() { texture.setSmooth(true); }
     void draw(sf::RenderWindow& window) const;
     void move(float dt);
 };
@@ -84,6 +89,7 @@ struct State
     bool pause = true; 
     bool move_paddle_left = false;
     bool move_paddle_right = false;
+    unsigned int score = 0;
 
     State() = default;
     void draw(sf::RenderWindow& window) const;
@@ -118,10 +124,16 @@ void Ball::draw(sf::RenderWindow& window) const
 
 void State::draw(sf::RenderWindow& window) const
 {
+    sf::Font font("resources/dejavu-sans-mono-font/DejavuSansMono-5m7L.ttf");
+
+    sf::Text score_text(font, "Score: " + std::to_string(score), 24);
+    score_text.setFillColor(sf::Color::White);
+    score_text.setPosition({10.f, 10.f});
+    window.draw(score_text);
+
     if (pause)
     {
-        sf::Font font("resources/tuffy.ttf");
-        sf::Text text(font, "Press space to start", 24);
+        sf::Text text(font, "Press SPACE to start", 24);
         text.setFillColor(sf::Color::White);
         text.setPosition({(window_width - text.getLocalBounds().size.x)/2.f, (window_height - text.getLocalBounds().size.y)/2.f});
         window.draw(text);
@@ -157,9 +169,9 @@ bool Paddle::hit(const Ball& ball) const
            ball.pos.x - ball.radius <= pos.x + size.x;
 }
 
-void Paddle::strike(Ball& ball) const
+bool Paddle::strike(Ball& ball) const
 {
-    if (!hit(ball)) return;
+    if (!hit(ball)) return false;
 
     float paddle_center_x = pos.x + size.x / 2.f;
     float hit_offset = ball.pos.x - paddle_center_x;
@@ -177,10 +189,12 @@ void Paddle::strike(Ball& ball) const
     if (ball.pos.y > paddle_center_y) 
     {
         ball.angle = reflect_vertical(ball.angle);
+        return false;
     }
     else 
     {
         ball.pos.y = pos.y - ball.radius;
+        return true;
     }
 }
 
@@ -199,6 +213,7 @@ void State::restart()
     
     move_paddle_left = false;
     move_paddle_right = false;
+    score = 0;
 }
 
 void State::field_limits()
@@ -242,7 +257,13 @@ void State::field_limits()
 void State::collisions()
 {
     field_limits();
-    paddle.strike(ball);
+
+    if (paddle.strike(ball))
+    {
+        score++;
+
+        ball.speed = std::min(ball.speed + ball_speed_increment, ball_max_speed);
+    }
 }
 
 void State::update()
@@ -284,27 +305,39 @@ void handle_resize(const sf::Event::Resized &resized, sf::RenderWindow &window)
 
 void handle_key_pressed(const sf::Event::KeyPressed &keyPressed, sf::RenderWindow &window, State &gs)
 {
-    if (keyPressed.code == sf::Keyboard::Key::Escape)
-        window.close();
-    
-    if (keyPressed.code == sf::Keyboard::Key::Space)
+    switch (keyPressed.code)
     {
-        gs.clock.restart();
-        gs.pause = !gs.pause;
+        case sf::Keyboard::Key::Escape:
+            window.close();
+            return;
+        case sf::Keyboard::Key::Space:
+            gs.clock.restart();
+            gs.pause = !gs.pause;
+            return;
+        case sf::Keyboard::Key::Left:
+            gs.move_paddle_left = true;
+            return;
+        case sf::Keyboard::Key::Right:
+            gs.move_paddle_right = true;
+            return;
+        default:
+            return;
     }
-
-    if (keyPressed.code == sf::Keyboard::Key::Left)
-        gs.move_paddle_left = true;
-    if (keyPressed.code == sf::Keyboard::Key::Right)
-        gs.move_paddle_right = true;
 }
 
 void handle_key_released(const sf::Event::KeyReleased &keyReleased, State &gs)
 {
-    if (keyReleased.code == sf::Keyboard::Key::Left)
-        gs.move_paddle_left = false;
-    if (keyReleased.code == sf::Keyboard::Key::Right)
-        gs.move_paddle_right = false;
+    switch (keyReleased.code)
+    {
+        case sf::Keyboard::Key::Left:
+            gs.move_paddle_left = false;
+            return;
+        case sf::Keyboard::Key::Right:
+            gs.move_paddle_right = false;
+            return;
+        default:
+            return;
+    }
 }
 
 void handle_lost_focus(State &gs)
@@ -328,7 +361,10 @@ int main()
         (desktop.size.y - window_height) / 2
     );
 
-    sf::RenderWindow window(sf::VideoMode ({window_width, window_height}), window_title);
+    sf::ContextSettings settings;
+    settings.antiAliasingLevel = 8;
+
+    sf::RenderWindow window(sf::VideoMode ({window_width, window_height}), window_title, sf::State::Windowed, settings);
     window.setFramerateLimit(max_frame_rate);
     window.setMinimumSize(window.getSize());
     window.setPosition(centerPosition);
