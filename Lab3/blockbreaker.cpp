@@ -21,7 +21,14 @@ const sf::Vector2f block_size = {60.f, 20.f};
 const sf::Vector2i block_num = {13, 6};
 
 // block
-const sf::Color block_fill_color = sf::Color::Blue;
+const std::vector<sf::Color> row_colors = {
+    sf::Color::Red,
+    sf::Color(255, 128, 0), // Arancione
+    sf::Color::Yellow,
+    sf::Color::Green,
+    sf::Color::Cyan,
+    sf::Color::Blue
+};
 const sf::Color block_outline_color = sf::Color::Black;
 const float block_outline_thickness = -2.f;
 
@@ -69,9 +76,10 @@ struct Block
 {
     sf::Vector2f pos;
     sf::Vector2f size;
+    sf::Color color;
     bool intact = true;
 
-    Block(sf::Vector2f p, sf::Vector2f s) : pos(p), size(s) {}
+    Block(sf::Vector2f p, sf::Vector2f s, sf::Color c) : pos(p), size(s), color(c) {}
     
     void draw(sf::RenderWindow& window) const;
     bool is_inside(sf::Vector2f point) const;
@@ -147,7 +155,7 @@ void Block::draw(sf::RenderWindow& window) const
 
     sf::RectangleShape shape(size);
     shape.setPosition(pos);
-    shape.setFillColor(block_fill_color);
+    shape.setFillColor(color);
     shape.setOutlineColor(block_outline_color);
     shape.setOutlineThickness(block_outline_thickness);
     window.draw(shape);
@@ -198,10 +206,12 @@ Wall::Wall()
 
     for (int r = 0; r < block_num.y; ++r)
     {
+        sf::Color current_color = row_colors[r % row_colors.size()];
+
         for (int c = 0; c < block_num.x; ++c)
         {
             sf::Vector2f p(start_x + static_cast<float>(c) * block_size.x, start_y + static_cast<float>(r) * block_size.y);
-            blocks.emplace_back(p, block_size);
+            blocks.emplace_back(p, block_size, current_color);
         }
     }
 }
