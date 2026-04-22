@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <cmath>
+#include <vector>
 #include "textures.hpp"
 
 //////////////////////
@@ -13,13 +14,24 @@ const unsigned window_width = 800;
 const unsigned window_height = 600;
 const unsigned max_frame_rate = 1200;
 
+// wall
+const sf::Vector2f wall_displacement = {5.f, 40.f};
+const sf::Vector2f wall_size = {window_width - 2 * wall_displacement.x, window_height - 2 * wall_displacement.y};
+const sf::Vector2f block_size = {60.f, 20.f};
+const sf::Vector2i block_num = {13, 6};
+
+// block
+const sf::Color block_fill_color = sf::Color::Blue;
+const sf::Color block_outline_color = sf::Color::Black;
+const float block_outline_thickness = -2.f;
+
 // ball
 const float ball_radius = 10.f;
 const float ball_initial_speed = 500.f;
 const sf::Angle ball_initial_angle = sf::degrees(-60.f);
 
-const float ball_speed_increment = 25.f;
-const float ball_max_speed = 1200.f;
+const float ball_speed_increment = 5.f;
+const float ball_max_speed = 800.f;
 
 // paddle
 const sf::Vector2f paddle_size = {100.f, 16.f};
@@ -53,6 +65,28 @@ sf::Angle reflect_vertical(sf::Angle angle)
 
 struct Ball;
 
+struct Block
+{
+    sf::Vector2f pos;
+    sf::Vector2f size;
+    bool intact = true;
+
+    Block(sf::Vector2f p, sf::Vector2f s) : pos(p), size(s) {}
+    
+    void draw(sf::RenderWindow& window) const;
+    bool is_inside(sf::Vector2f point) const;
+    bool hit(Ball& ball);
+};
+
+struct Wall
+{
+    std::vector<Block> blocks;
+
+    Wall();
+    void draw(sf::RenderWindow& window) const;
+    bool hit(Ball& ball);
+};
+
 struct Paddle
 {
     sf::Vector2f size = paddle_size;
@@ -85,7 +119,9 @@ struct State
 {
     Ball ball;
     Paddle paddle;
+    Wall wall;
     sf::Clock clock;
+
     bool pause = true; 
     bool move_paddle_left = false;
     bool move_paddle_right = false;
@@ -98,6 +134,93 @@ struct State
     void field_limits();
     void collisions();
 };
+
+
+
+//////////////////
+// Block & Wall //
+//////////////////
+
+void Block::draw(sf::RenderWindow& window) const
+{
+    if (!intact) return;
+
+    sf::RectangleShape shape(size);
+    shape.setPosition(pos);
+    shape.setFillColor(block_fill_color);
+    shape.setOutlineColor(block_outline_color);
+    shape.setOutlineThickness(block_outline_thickness);
+    window.draw(shape);
+}
+
+bool Block::is_inside(sf::Vector2f point) const
+{
+    return point.x >= pos.x && point.x <= pos.x + size.x &&
+           point.y >= pos.y && point.y <= pos.y + size.y;
+}
+
+bool Block::hit(Ball& ball)
+{
+    if (!intact) return false;
+
+    sf::Vector2f top = {ball.pos.x, ball.pos.y - ball.radius};
+    sf::Vector2f bottom = {ball.pos.x, ball.pos.y + ball.radius};
+    sf::Vector2f left = {ball.pos.x - ball.radius, ball.pos.y};
+    sf::Vector2f right = {ball.pos.x + ball.radius, ball.pos.y};
+
+    sf::Vector2f ball_dir(1.f, ball.angle);
+    
+    bool hit_vertical = (is_inside(top) && ball_dir.y < 0.f) || (is_inside(bottom) && ball_dir.y > 0.f);
+    bool hit_horizontal = (is_inside(left) && ball_dir.x < 0.f) || (is_inside(right) && ball_dir.x > 0.f);
+
+    if (hit_vertical)
+    {
+        ball.angle = reflect_vertical(ball.angle);
+    } 
+    else if (hit_horizontal)
+    {
+        ball.angle = reflect_horizontal(ball.angle);
+    }
+
+    if (hit_vertical || hit_horizontal)
+    {
+        intact = false;
+        return true;
+    }
+
+    return false;
+}
+
+Wall::Wall()
+{
+    float start_x = wall_displacement.x + (wall_size.x - (block_num.x * block_size.x)) / 2.f;
+    float start_y = wall_displacement.y;
+
+    for (int r = 0; r < block_num.y; ++r)
+    {
+        for (int c = 0; c < block_num.x; ++c)
+        {
+            sf::Vector2f p(start_x + static_cast<float>(c) * block_size.x, start_y + static_cast<float>(r) * block_size.y);
+            blocks.emplace_back(p, block_size);
+        }
+    }
+}
+
+void Wall::draw(sf::RenderWindow& window) const
+{
+    for (const auto& block : blocks)
+        block.draw(window);
+}
+
+bool Wall::hit(Ball& ball)
+{
+    for (auto& block : blocks)
+    {
+        if (block.intact && block.hit(ball))
+            return true;
+    }
+    return false;
+}
 
 
 
@@ -131,6 +254,10 @@ void State::draw(sf::RenderWindow& window) const
     score_text.setPosition({10.f, 10.f});
     window.draw(score_text);
 
+    wall.draw(window);
+    ball.draw(window);
+    paddle.draw(window);
+
     if (pause)
     {
         sf::Text text(font, "Press SPACE to start", 24);
@@ -138,9 +265,6 @@ void State::draw(sf::RenderWindow& window) const
         text.setPosition({(window_width - text.getLocalBounds().size.x)/2.f, (window_height - text.getLocalBounds().size.y)/2.f});
         window.draw(text);
     }
-
-    ball.draw(window);
-    paddle.draw(window);
 }
 
 
@@ -214,6 +338,11 @@ void State::restart()
     move_paddle_left = false;
     move_paddle_right = false;
     score = 0;
+
+    for (auto& block : wall.blocks)
+    {
+        block.intact = true;
+    }
 }
 
 void State::field_limits()
@@ -224,7 +353,6 @@ void State::field_limits()
     if (paddle.pos.x > window_width - paddle.size.x) 
         paddle.pos.x = window_width - paddle.size.x;
 
-    // Componenti della traiettoria pallina per collisioni robuste
     sf::Vector2f ball_dir(1.f, ball.angle);
 
     // Bordo Sinistro
@@ -258,10 +386,10 @@ void State::collisions()
 {
     field_limits();
 
-    if (paddle.strike(ball))
-    {
-        score++;
+    paddle.strike(ball);
 
+    if (wall.hit(ball)) {
+        score += 10;
         ball.speed = std::min(ball.speed + ball_speed_increment, ball_max_speed);
     }
 }
