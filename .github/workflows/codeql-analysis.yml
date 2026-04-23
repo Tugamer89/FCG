@@ -24,7 +24,7 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libglfw3-dev libgl1-mesa-dev libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev
+        sudo apt-get install -y libglfw3-dev libgl1-mesa-dev libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev libudev-dev
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
@@ -34,7 +34,7 @@ jobs:
 
     - name: Build Project
       run: |
-        cmake -B build
+        cmake -B build -DCMAKE_POLICY_VERSION_MINIMUM=3.20
         cmake --build build
 
     - name: Perform CodeQL Analysis
