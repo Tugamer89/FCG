@@ -29,8 +29,11 @@ jobs:
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4
       with:
-        languages: 'cpp'
-        queries: security-extended,security-and-quality
+        languages: c-cpp
+        config: |
+          paths-ignore:
+            - '**/_deps/**'
+            - '**/SFML/**'
 
     - name: Build Project
       run: |

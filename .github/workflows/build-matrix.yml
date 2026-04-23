@@ -19,26 +19,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-
-      - name: Install Dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build libglfw3-dev libgl1-mesa-dev libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev libudev-dev libfreetype6-dev libopenal-dev libflac-dev libogg-dev libvorbis-dev
-
-      - name: Install Dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: brew install ninja
-
-      - name: Install Dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: choco install ninja
-
-      - name: Setup Compiler Cache
-        uses: hendrikmuhs/ccache-action@v1.2
+      - name: Setup Environment
+        uses: ./.github/actions/setup-build-env
         with:
-          key: ${{ matrix.os }}-${{ matrix.build_type }}
-          variant: sccache 
+          os: ${{ runner.os }}
+          build_type: ${{ matrix.build_type }}
 
       - name: Configure CMake
         run: >
@@ -51,3 +36,14 @@ jobs:
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+
+      - name: Package with CPack
+        working-directory: ${{github.workspace}}/build
+        run: cpack -G ZIP -C ${{matrix.build_type}}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcg-${{ runner.os }}-${{ matrix.build_type }}
+          path: ${{github.workspace}}/build/*.zip
+          retention-days: 7

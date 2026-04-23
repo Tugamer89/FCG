@@ -1,0 +1,36 @@
+name: 'Setup Build Environment'
+description: 'Install OS dependencies and configure compiler cache (sccache)'
+inputs:
+  os:
+    description: 'The operating system of the runner (e.g., Linux, macOS, Windows)'
+    required: true
+  build_type:
+    description: 'The build configuration (e.g., Release, Debug)'
+    required: true
+    default: 'Release'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Dependencies (Linux)
+      if: inputs.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ninja-build libglfw3-dev libgl1-mesa-dev libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev libudev-dev libfreetype6-dev libopenal-dev libflac-dev libogg-dev libvorbis-dev
+
+    - name: Install Dependencies (macOS)
+      if: inputs.os == 'macOS'
+      shell: bash
+      run: brew install ninja
+
+    - name: Install Dependencies (Windows)
+      if: inputs.os == 'Windows'
+      shell: pwsh
+      run: choco install ninja
+
+    - name: Setup Compiler Cache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ${{ inputs.os }}-${{ inputs.build_type }}
+        variant: sccache

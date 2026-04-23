@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(FCG_Labs LANGUAGES CXX)
 
+# Output directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin)
@@ -30,3 +31,10 @@ target_compile_options(project_warnings INTERFACE
 add_subdirectory(Lab1)
 add_subdirectory(Lab2)
 add_subdirectory(Lab3)
+
+# Installation & Packing
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/resources DESTINATION bin)
+include(CPack)
+set(CPACK_GENERATOR "ZIP")
+set(CPACK_PACKAGE_NAME "fcg-labs")
+set(CPACK_PACKAGE_VERSION "1.0.0")
