@@ -52,7 +52,7 @@ jobs:
           Compress-Archive -Path release_package\* -DestinationPath ${{ matrix.artifact_name }}
 
       - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ matrix.artifact_name }}
         env:
