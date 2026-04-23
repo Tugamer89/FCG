@@ -21,15 +21,22 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         include:
           - os: ubuntu-latest
-            artifact_name: fcg-linux.zip
+            os_suffix: linux
           - os: windows-latest
-            artifact_name: fcg-windows.zip
+            os_suffix: windows
           - os: macos-latest
-            artifact_name: fcg-macos.zip
+            os_suffix: macos
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+
+      - name: Set Version Environment Variable
+        shell: bash
+        run: |
+          VERSION=${{ inputs.tag_name || github.event.release.tag_name || github.ref_name }}
+          VERSION=${VERSION#refs/tags/}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Setup Environment
         uses: ./.github/actions/setup-build-env
@@ -53,14 +60,17 @@ jobs:
         working-directory: build
         run: cpack -G ZIP -C Release
 
-      - name: Rename Package
+      - name: Rename and Prepare Package
         shell: bash
         run: |
+          FINAL_NAME="fcg-${{ env.VERSION }}-${{ matrix.os_suffix }}.zip"
+          
           GENERATED_ZIP=$(find build -maxdepth 1 -name "*.zip" -print -quit)
           
           if [ -n "$GENERATED_ZIP" ]; then
-            echo "Moving $GENERATED_ZIP to ${{ matrix.artifact_name }}"
-            mv "$GENERATED_ZIP" "${{ matrix.artifact_name }}"
+            echo "Renaming $GENERATED_ZIP to $FINAL_NAME"
+            mv "$GENERATED_ZIP" "$FINAL_NAME"
+            echo "ASSET_NAME=$FINAL_NAME" >> $GITHUB_ENV
           else
             echo "Error: No zip file found in build directory"
             exit 1
@@ -69,7 +79,7 @@ jobs:
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          files: ${{ matrix.artifact_name }}
-          tag_name: ${{ github.event.release.tag_name || inputs.tag_name }}
+          files: ${{ env.ASSET_NAME }}
+          tag_name: ${{ env.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
