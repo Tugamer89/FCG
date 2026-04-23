@@ -1,6 +1,11 @@
 #include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <cmath>
+#include <format>
+#include <numbers>
+#include <random>
+#include <ranges>
+#include <string>
 #include <vector>
 
 #include "textures.hpp"
@@ -10,36 +15,62 @@
 //////////////////////
 
 // window
-const std::string window_title = "blockbreaker";
-const unsigned window_width = 800;
-const unsigned window_height = 600;
-const unsigned max_frame_rate = 1200;
+const std::string window_title = "Block Breaker";
+constexpr unsigned window_width = 800;
+constexpr unsigned window_height = 600;
+constexpr unsigned max_frame_rate = 120;
 
 // wall
-const sf::Vector2f wall_displacement = {5.f, 40.f};
+const sf::Vector2f wall_displacement = {5.f, 50.f};
 const sf::Vector2f wall_size = {window_width - 2 * wall_displacement.x,
                                 window_height - 2 * wall_displacement.y};
-const sf::Vector2f block_size = {60.f, 20.f};
-const sf::Vector2i block_num = {13, 6};
+const sf::Vector2f block_size = {59.f, 20.f};
+const sf::Vector2i block_num = {13, 8};
 
-// block
-const std::vector<sf::Color> row_colors = {sf::Color::Red,    sf::Color(255, 128, 0),  // Arancione
-                                           sf::Color::Yellow, sf::Color::Green,
-                                           sf::Color::Cyan,   sf::Color::Blue};
-const sf::Color block_outline_color = sf::Color::Black;
-const float block_outline_thickness = -2.f;
+const sf::Color block_outline_color = sf::Color(30, 30, 30);
+constexpr float block_outline_thickness = -2.f;
 
 // ball
-const float ball_radius = 10.f;
-const float ball_initial_speed = 500.f;
-const sf::Angle ball_initial_angle = sf::degrees(-60.f);
+constexpr float ball_radius = 8.f;
+constexpr float ball_initial_speed = 350.f;
 
-const float ball_speed_increment = 5.f;
-const float ball_max_speed = 800.f;
+constexpr float ball_speed_increment = 15.f;
+constexpr float ball_max_speed = 850.f;
 
 // paddle
 const sf::Vector2f paddle_size = {100.f, 16.f};
-const float paddle_initial_speed = 600.f;
+constexpr float paddle_initial_speed = 700.f;
+
+//////////////////
+// Random & Utils //
+//////////////////
+
+float get_random_float(float min, float max) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dis(min, max);
+    return dis(gen);
+}
+
+sf::Angle get_random_start_angle() {
+    bool go_right = get_random_float(0.f, 1.f) > 0.5f;
+    float angle_deg = go_right ? get_random_float(-75.f, -45.f) : get_random_float(-135.f, -105.f);
+    return sf::degrees(angle_deg);
+}
+
+//////////////////
+// Level Design //
+//////////////////
+
+// 0: Vuoto, 1: Giallo (1 colpo), 2: Arancione (2 colpi), 3: Rosso (3 colpi), 4: Grigio
+// (Indistruttibile)
+const std::vector<std::vector<std::string>> levels_data = {
+    {// Livello 1: Semplice
+     "0000000000000", "0011111111100", "0111111111110", "0011111111100", "0000000000000"},
+    {// Livello 2: Mattoni a due colpi
+     "0000000000000", "0222222222220", "0111111111110", "0022200022200", "0011100011100"},
+    {// Livello 3: Muro solido e indistruttibili
+     "0333333333330", "0220022200220", "0110011100110", "0440000000440", "0110000000110"}};
 
 //////////////////////
 // Helper functions //
@@ -57,36 +88,79 @@ sf::Angle reflect_vertical(sf::Angle angle) {
     return v.angle();
 }
 
+sf::Color get_color_for_hp(int hp) {
+    switch (hp) {
+        case 1:
+            return sf::Color::Yellow;
+        case 2:
+            return sf::Color(255, 128, 0);  // Arancione
+        case 3:
+            return sf::Color::Red;
+        case 4:
+            return sf::Color(120, 120, 120);  // Grigio
+        default:
+            return sf::Color::Transparent;
+    }
+}
+
 /////////////
 // Classes //
 /////////////
 
 struct Ball;
 
+struct Particle {
+    sf::Vector2f pos;
+    sf::Vector2f vel;
+    sf::Color color;
+    float life = 1.0f;
+    float size;
+
+    void update(float dt) {
+        pos += vel * dt;
+        life -= dt * 1.5f;
+    }
+
+    void draw(sf::RenderWindow& window) const {
+        if (life <= 0) return;
+        sf::RectangleShape p({size, size});
+        p.setPosition(pos);
+        sf::Color c = color;
+        c.a = static_cast<uint8_t>(255 * life);
+        p.setFillColor(c);
+        window.draw(p);
+    }
+};
+
 struct Block {
     sf::Vector2f pos;
     sf::Vector2f size;
     sf::Color color;
-    bool intact = true;
+    int hp;  // 0 = distrutto, 4 = indistruttibile
 
-    Block(sf::Vector2f p, sf::Vector2f s, sf::Color c) : pos(p), size(s), color(c) {}
+    Block(sf::Vector2f p, sf::Vector2f s, int health) : pos(p), size(s), hp(health) {
+        color = get_color_for_hp(hp);
+    }
 
     void draw(sf::RenderWindow& window) const;
-    bool is_inside(sf::Vector2f point) const;
-    bool hit(Ball& ball);
+    [[nodiscard]] bool is_inside(sf::Vector2f point) const;
+    bool hit(Ball& ball, std::vector<Particle>& particles);
+    void spawn_particles(std::vector<Particle>& particles) const;
 };
 
 struct Wall {
     std::vector<Block> blocks;
 
-    Wall();
+    Wall() = default;
+    void load_level(size_t level_idx);
     void draw(sf::RenderWindow& window) const;
-    bool hit(Ball& ball);
+    bool hit(Ball& ball, std::vector<Particle>& particles);
+    [[nodiscard]] bool is_cleared() const;
 };
 
 struct Paddle {
     sf::Vector2f size = paddle_size;
-    sf::Vector2f pos = {(window_width - paddle_size.x) / 2.f, window_height - paddle_size.y};
+    sf::Vector2f pos = {(window_width - paddle_size.x) / 2.f, window_height - paddle_size.y - 10.f};
     float speed = paddle_initial_speed;
     sf::Texture texture = sf::Texture(paddle_png, paddle_png_len);
 
@@ -94,15 +168,15 @@ struct Paddle {
     void draw(sf::RenderWindow& window) const;
     void move_left(float dt);
     void move_right(float dt);
-    bool hit(const Ball& ball) const;
+    [[nodiscard]] bool hit(const Ball& ball) const;
     bool strike(Ball& ball) const;
 };
 
 struct Ball {
     float radius = ball_radius;
-    sf::Vector2f pos = {window_width / 2.f, window_height - paddle_size.y - ball_radius};
+    sf::Vector2f pos = {window_width / 2.f, window_height - paddle_size.y - ball_radius - 20.f};
     float speed = ball_initial_speed;
-    sf::Angle angle = ball_initial_angle;
+    sf::Angle angle = get_random_start_angle();
     sf::Texture texture = sf::Texture(ball_png, ball_png_len);
 
     Ball() { texture.setSmooth(true); }
@@ -115,16 +189,28 @@ struct State {
     Paddle paddle;
     Wall wall;
     sf::Clock clock;
+    sf::Font font = sf::Font("resources/dejavu-sans-mono-font/DejavuSansMono-5m7L.ttf");
+
+    std::vector<Particle> particles;
 
     bool pause = true;
+    bool game_over = false;
+    bool game_won = false;
+
     bool move_paddle_left = false;
     bool move_paddle_right = false;
-    unsigned int score = 0;
 
-    State() = default;
+    unsigned int score = 0;
+    unsigned int lives = 3;
+    unsigned int current_level = 0;
+
+    State() { wall.load_level(current_level); }
+
     void draw(sf::RenderWindow& window) const;
     void update();
-    void restart();
+    void restart_game();
+    void reset_ball();
+    void advance_level();
     void field_limits();
     void collisions();
 };
@@ -133,8 +219,22 @@ struct State {
 // Block & Wall //
 //////////////////
 
+void Block::spawn_particles(std::vector<Particle>& particles) const {
+    int num_particles = 12;
+    for (int i = 0; i < num_particles; ++i) {
+        Particle p;
+        p.pos = pos + size / 2.f;
+        float angle = get_random_float(0.f, 360.f) * std::numbers::pi_v<float> / 180.f;
+        float speed = get_random_float(50.f, 200.f);
+        p.vel = {std::cos(angle) * speed, std::sin(angle) * speed};
+        p.color = color;
+        p.size = get_random_float(2.f, 5.f);
+        particles.push_back(p);
+    }
+}
+
 void Block::draw(sf::RenderWindow& window) const {
-    if (!intact) return;
+    if (hp <= 0) return;
 
     sf::RectangleShape shape(size);
     shape.setPosition(pos);
@@ -149,8 +249,8 @@ bool Block::is_inside(sf::Vector2f point) const {
            point.y <= pos.y + size.y;
 }
 
-bool Block::hit(Ball& ball) {
-    if (!intact) return false;
+bool Block::hit(Ball& ball, std::vector<Particle>& particles) {
+    if (hp <= 0) return false;
 
     sf::Vector2f top = {ball.pos.x, ball.pos.y - ball.radius};
     sf::Vector2f bottom = {ball.pos.x, ball.pos.y + ball.radius};
@@ -171,24 +271,39 @@ bool Block::hit(Ball& ball) {
     }
 
     if (hit_vertical || hit_horizontal) {
-        intact = false;
+        if (hp < 4) {  // 4 = indistruttibile
+            hp--;
+            if (hp > 0) {
+                color = get_color_for_hp(hp);
+            } else {
+                spawn_particles(particles);
+            }
+        }
         return true;
     }
 
     return false;
 }
 
-Wall::Wall() {
-    float start_x = wall_displacement.x + (wall_size.x - (block_num.x * block_size.x)) / 2.f;
+void Wall::load_level(size_t level_idx) {
+    blocks.clear();
+    if (level_idx >= levels_data.size()) return;
+
+    const auto& layout = levels_data[level_idx];
+
+    float start_x = wall_displacement.x +
+                    (wall_size.x - (static_cast<float>(layout[0].size()) * block_size.x)) / 2.f;
     float start_y = wall_displacement.y;
 
-    for (int r = 0; r < block_num.y; ++r) {
-        sf::Color current_color = row_colors[r % row_colors.size()];
-
-        for (int c = 0; c < block_num.x; ++c) {
-            sf::Vector2f p(start_x + static_cast<float>(c) * block_size.x,
-                           start_y + static_cast<float>(r) * block_size.y);
-            blocks.emplace_back(p, block_size, current_color);
+    for (size_t r = 0; r < layout.size(); ++r) {
+        for (size_t c = 0; c < layout[r].size(); ++c) {
+            char type = layout[r][c];
+            if (type != '0') {
+                int health = type - '0';
+                sf::Vector2f p(start_x + static_cast<float>(c) * block_size.x,
+                               start_y + static_cast<float>(r) * block_size.y);
+                blocks.emplace_back(p, block_size, health);
+            }
         }
     }
 }
@@ -197,11 +312,16 @@ void Wall::draw(sf::RenderWindow& window) const {
     for (const auto& block : blocks) block.draw(window);
 }
 
-bool Wall::hit(Ball& ball) {
+bool Wall::hit(Ball& ball, std::vector<Particle>& particles) {
     for (auto& block : blocks) {
-        if (block.intact && block.hit(ball)) return true;
+        if (block.hp > 0 && block.hit(ball, particles)) return true;
     }
     return false;
+}
+
+bool Wall::is_cleared() const {
+    return std::ranges::none_of(blocks,
+                                [](const Block& block) { return block.hp > 0 && block.hp < 4; });
 }
 
 //////////
@@ -224,18 +344,37 @@ void Ball::draw(sf::RenderWindow& window) const {
 }
 
 void State::draw(sf::RenderWindow& window) const {
-    sf::Font font("resources/dejavu-sans-mono-font/DejavuSansMono-5m7L.ttf");
-
-    sf::Text score_text(font, "Score: " + std::to_string(score), 24);
-    score_text.setFillColor(sf::Color::White);
-    score_text.setPosition({10.f, 10.f});
-    window.draw(score_text);
+    std::string ui_string =
+        std::format("Score: {}   Lives: {}   Level: {}", score, lives, current_level + 1);
+    sf::Text ui_text(font, ui_string, 20);
+    ui_text.setFillColor(sf::Color::White);
+    ui_text.setPosition({10.f, 10.f});
+    window.draw(ui_text);
 
     wall.draw(window);
-    ball.draw(window);
-    paddle.draw(window);
 
-    if (pause) {
+    for (const auto& p : particles) {
+        p.draw(window);
+    }
+
+    if (!game_over && !game_won) {
+        ball.draw(window);
+        paddle.draw(window);
+    }
+
+    if (game_over) {
+        sf::Text text(font, "GAME OVER\nPress SPACE to restart", 30);
+        text.setFillColor(sf::Color::Red);
+        text.setPosition(
+            {(window_width - text.getLocalBounds().size.x) / 2.f, window_height / 2.f});
+        window.draw(text);
+    } else if (game_won) {
+        sf::Text text(font, "VICTORY!\nYou have completed all levels!\nPress SPACE", 30);
+        text.setFillColor(sf::Color::Green);
+        text.setPosition(
+            {(window_width - text.getLocalBounds().size.x) / 2.f, window_height / 2.f});
+        window.draw(text);
+    } else if (pause) {
         sf::Text text(font, "Press SPACE to start", 24);
         text.setFillColor(sf::Color::White);
         text.setPosition({(window_width - text.getLocalBounds().size.x) / 2.f,
@@ -251,14 +390,12 @@ void State::draw(sf::RenderWindow& window) const {
 void Paddle::move_left(float dt) {
     pos.x -= speed * dt;
 }
-
 void Paddle::move_right(float dt) {
     pos.x += speed * dt;
 }
 
 bool Paddle::hit(const Ball& ball) const {
     if (sf::Vector2f(1.f, ball.angle).y < 0.f) return false;
-
     return ball.pos.y + ball.radius >= pos.y && ball.pos.y - ball.radius <= pos.y + size.y &&
            ball.pos.x + ball.radius >= pos.x && ball.pos.x - ball.radius <= pos.x + size.x;
 }
@@ -292,73 +429,100 @@ void Ball::move(float dt) {
     pos += sf::Vector2f(speed * dt, angle);
 }
 
-void State::restart() {
+void State::reset_ball() {
     pause = true;
     ball.speed = ball_initial_speed;
-    ball.angle = ball_initial_angle;
-    ball.pos = {window_width / 2.f, window_height - paddle_size.y - ball_radius};
-    paddle.pos = {(window_width - paddle_size.x) / 2.f, window_height - paddle_size.y};
-
+    ball.angle = get_random_start_angle();
+    ball.pos = {window_width / 2.f, window_height - paddle_size.y - ball_radius - 20.f};
+    paddle.pos = {(window_width - paddle_size.x) / 2.f, window_height - paddle_size.y - 10.f};
     move_paddle_left = false;
     move_paddle_right = false;
-    score = 0;
+}
 
-    for (auto& block : wall.blocks) {
-        block.intact = true;
+void State::restart_game() {
+    game_over = false;
+    game_won = false;
+    score = 0;
+    lives = 3;
+    current_level = 0;
+    wall.load_level(current_level);
+    particles.clear();
+    reset_ball();
+}
+
+void State::advance_level() {
+    current_level++;
+    if (current_level >= levels_data.size()) {
+        game_won = true;
+        pause = true;
+    } else {
+        wall.load_level(current_level);
+        reset_ball();
     }
 }
 
 void State::field_limits() {
-    // Correzione bordi racchetta
     if (paddle.pos.x < 0.f) paddle.pos.x = 0.f;
     if (paddle.pos.x > window_width - paddle.size.x) paddle.pos.x = window_width - paddle.size.x;
 
     sf::Vector2f ball_dir(1.f, ball.angle);
 
-    // Bordo Sinistro
     if (ball.pos.x - ball.radius < 0.f && ball_dir.x < 0.f) {
         ball.pos.x = ball.radius;
         ball.angle = reflect_horizontal(ball.angle);
-    }
-    // Bordo Destro
-    else if (ball.pos.x + ball.radius > window_width && ball_dir.x > 0.f) {
+    } else if (ball.pos.x + ball.radius > window_width && ball_dir.x > 0.f) {
         ball.pos.x = window_width - ball.radius;
         ball.angle = reflect_horizontal(ball.angle);
     }
 
-    // Soffitto
     if (ball.pos.y - ball.radius < 0.f && ball_dir.y < 0.f) {
         ball.pos.y = ball.radius;
         ball.angle = reflect_vertical(ball.angle);
     }
 
-    // Pavimento: Riavvio del livello
     if (ball.pos.y + ball.radius > window_height) {
-        restart();
+        lives--;
+        if (lives > 0) {
+            reset_ball();
+        } else {
+            game_over = true;
+            pause = true;
+        }
     }
 }
 
 void State::collisions() {
     field_limits();
 
-    paddle.strike(ball);
+    if (paddle.strike(ball)) {
+        ball.speed = std::min(ball.speed + ball_speed_increment * 0.1f, ball_max_speed);
+    }
 
-    if (wall.hit(ball)) {
+    if (wall.hit(ball, particles)) {
         score += 10;
         ball.speed = std::min(ball.speed + ball_speed_increment, ball_max_speed);
+
+        if (wall.is_cleared()) {
+            advance_level();
+        }
     }
 }
 
 void State::update() {
-    if (pause) return;
-
     float dt = clock.restart().asSeconds();
+
+    for (auto& p : particles) {
+        p.update(dt);
+    }
+
+    std::erase_if(particles, [](const Particle& p) { return p.life <= 0; });
+
+    if (pause || game_over || game_won) return;
 
     if (move_paddle_left) paddle.move_left(dt);
     if (move_paddle_right) paddle.move_right(dt);
 
     ball.move(dt);
-
     collisions();
 }
 
@@ -387,8 +551,12 @@ void handle_key_pressed(const sf::Event::KeyPressed& keyPressed, sf::RenderWindo
             window.close();
             return;
         case sf::Keyboard::Key::Space:
-            gs.clock.restart();
-            gs.pause = !gs.pause;
+            if (gs.game_over || gs.game_won) {
+                gs.restart_game();
+            } else {
+                gs.clock.restart();
+                gs.pause = !gs.pause;
+            }
             return;
         case sf::Keyboard::Key::Left:
             gs.move_paddle_left = true;
@@ -415,7 +583,7 @@ void handle_key_released(const sf::Event::KeyReleased& keyReleased, State& gs) {
 }
 
 void handle_lost_focus(State& gs) {
-    gs.pause = true;
+    if (!gs.game_over && !gs.game_won) gs.pause = true;
     gs.move_paddle_left = false;
     gs.move_paddle_right = false;
 }
@@ -441,7 +609,6 @@ int main() {
     State state;
 
     while (window.isOpen()) {
-        // events
         window.handleEvents(
             [&window](const sf::Event::Closed&) { handle_close(window); },
             [&window](const sf::Event::Resized& event) { handle_resize(event, window); },
@@ -451,8 +618,7 @@ int main() {
             [&state](const sf::Event::KeyReleased& event) { handle_key_released(event, state); },
             [&state](const sf::Event::FocusLost&) { handle_lost_focus(state); });
 
-        // display
-        window.clear(sf::Color::Black);
+        window.clear(sf::Color(15, 15, 20));
         state.update();
         state.draw(window);
         window.display();
