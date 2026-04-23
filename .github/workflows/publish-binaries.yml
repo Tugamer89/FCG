@@ -27,11 +27,11 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libglfw3-dev libgl1-mesa-dev libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev
+          sudo apt-get install -y libglfw3-dev libgl1-mesa-dev libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev libudev-dev
 
       - name: Configure and Build
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.20
           cmake --build build --config Release
 
       - name: Package Release (Unix - Mac/Linux)
