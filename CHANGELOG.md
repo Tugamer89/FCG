@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.0.0](https://github.com/Tugamer89/FCG/compare/v1.1.0...v2.0.0) (2026-04-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* updated C++ standard to C++26 and updated cmake minimum version to match the requirements
+
+### Features
+
+* added new level ([ac22872](https://github.com/Tugamer89/FCG/commit/ac2287274be4727f902e73b71c06bc6cf7bdca3f))
+* Implement automated packaging and optimize CI/CD ([c66466c](https://github.com/Tugamer89/FCG/commit/c66466c62ada240f2fc556106b78b4ec6b9af20d))
+* **lab3:** Implements lives, levels, particles, and resources via C++26 #embed ([bbd19c4](https://github.com/Tugamer89/FCG/commit/bbd19c4fd9883a5882787a20780b0584323d519d))
+* updated C++ standard to C++26 and updated cmake minimum version to match the requirements ([28dae9f](https://github.com/Tugamer89/FCG/commit/28dae9fc410de04def0ffb6bf9ab404ba2619855))
+
+
+### Bug Fixes
+
+* added license for the resources ([e332941](https://github.com/Tugamer89/FCG/commit/e3329416bf3d781545c21d4544799f97f73b2a32))
+* bumped SFML version ([c6a4ec8](https://github.com/Tugamer89/FCG/commit/c6a4ec83f970b695013e5e08b2147f1ef8b88f50))
+* moved set of cxx standard after library inclusion ([187c2f5](https://github.com/Tugamer89/FCG/commit/187c2f5c12cbd7483812bef4226af0dd7fb9bd38))
+
 ## [1.1.0](https://github.com/Tugamer89/FCG/compare/v1.0.0...v1.1.0) (2026-04-23)
 
 
