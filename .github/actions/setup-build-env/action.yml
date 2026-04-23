@@ -21,7 +21,7 @@ runs:
         
         sudo apt-get install -y ninja-build \
           libx11-dev libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev libudev-dev \
-          libgl1-mesa-dev libfreetype6-dev libharfbuzz-dev \
+          libgl1-mesa-dev libglfw3-dev libfreetype6-dev libharfbuzz-dev \
           libopenal-dev libflac-dev libogg-dev libvorbis-dev \
           libmbedtls-dev libssh2-1-dev \
           gcc-15 g++-15
