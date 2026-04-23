@@ -18,7 +18,7 @@ runs:
       run: |
         sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
         sudo apt-get update
-        sudo apt-get install -y ninja-build libglfw3-dev libgl1-mesa-dev libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev libudev-dev libfreetype6-dev libopenal-dev libflac-dev libogg-dev libvorbis-dev gcc-15 g++-15
+        sudo apt-get install -y ninja-build libglfw3-dev libgl1-mesa-dev libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev libudev-dev libfreetype6-dev libopenal-dev libflac-dev libogg-dev libvorbis-dev gcc-15 g++-15 libmbedtls-dev libssh2-1-dev
         echo "CC=gcc-15" >> $GITHUB_ENV
         echo "CXX=g++-15" >> $GITHUB_ENV
 
