@@ -20,7 +20,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Warnings
 add_library(project_warnings INTERFACE)
 target_compile_options(project_warnings INTERFACE
-  $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wall>
+  $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+    -Wall 
+    -funsigned-char
+    -Wno-error=narrowing
+  >
   $<$<CXX_COMPILER_ID:MSVC>:/W4>
 )
 
