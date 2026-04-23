@@ -51,8 +51,15 @@ jobs:
       - name: Rename Package
         shell: bash
         run: |
-          cd build
-          mv fcg-labs-1.0.0-*.zip ../${{ matrix.artifact_name }}
+          GENERATED_ZIP=$(find build -maxdepth 1 -name "*.zip" -print -quit)
+          
+          if [ -n "$GENERATED_ZIP" ]; then
+            echo "Moving $GENERATED_ZIP to ${{ matrix.artifact_name }}"
+            mv "$GENERATED_ZIP" "${{ matrix.artifact_name }}"
+          else
+            echo "Error: No zip file found in build directory"
+            exit 1
+          fi
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v3
