@@ -41,7 +41,7 @@ jobs:
         run: cpack -G ZIP -C ${{matrix.build_type}}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: fcg-${{ runner.os }}-${{ matrix.build_type }}
           path: ${{github.workspace}}/build/*.zip
