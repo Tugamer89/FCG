@@ -1,0 +1,59 @@
+name: Publish Binaries
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish-binaries:
+    name: Package for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: fcg-linux.zip
+          - os: windows-latest
+            artifact_name: fcg-windows.zip
+          - os: macos-latest
+            artifact_name: fcg-macos.zip
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux Dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libglfw3-dev libgl1-mesa-dev libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev
+
+      - name: Configure and Build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release
+
+      - name: Package Release (Unix - Mac/Linux)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir release_package
+          cp -r resources release_package/
+          cp build/bin/* release_package/
+          cd release_package
+          zip -r ../${{ matrix.artifact_name }} ./*
+
+      - name: Package Release (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          New-Item -ItemType Directory -Force -Path release_package
+          Copy-Item -Path resources -Destination release_package -Recurse
+          Copy-Item -Path build\bin\*.exe -Destination release_package
+          Compress-Archive -Path release_package\* -DestinationPath ${{ matrix.artifact_name }}
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.artifact_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

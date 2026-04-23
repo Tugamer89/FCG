@@ -1,0 +1,12 @@
+BasedOnStyle: Google
+
+ColumnLimit: 100
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+PointerAlignment: Left
+SortIncludes: true
+AllowShortFunctionsOnASingleLine: Inline
+NamespaceIndentation: None
+Standard: c++17

@@ -2,10 +2,9 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Graphics.hpp>
-
-#include <vector>
-#include <string>
 #include <fstream>
+#include <string>
+#include <vector>
 
 ////////////////////////////////////////////////////////////
 /// GUI State
@@ -13,8 +12,7 @@ const int FONT_SIZE = 24;
 const int FONT_WIDTH = 14;
 const std::string FONT_NAME = "resources/dejavu-sans-mono-font/DejavuSansMono-5m7L.ttf";
 
-struct State
-{
+struct State {
     // General resources
     sf::RenderWindow window;
     const sf::Font font{FONT_NAME};
@@ -29,13 +27,9 @@ struct State
     sf::Clock fpsClock;
     int frameCounter = 0;
 
-    State(unsigned w, unsigned h, const std::string &title)
-    {
+    State(unsigned w, unsigned h, const std::string& title) {
         sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
-        sf::Vector2i centerPosition(
-            (desktop.size.x - w) / 2,
-            (desktop.size.y - h) / 2
-        );
+        sf::Vector2i centerPosition((desktop.size.x - w) / 2, (desktop.size.y - h) / 2);
 
         window = sf::RenderWindow(sf::VideoMode({w, h}), title);
         window.setPosition(centerPosition);
@@ -43,29 +37,26 @@ struct State
 
         log.resize(1, "");
         text_view = sf::IntRect({0, 0}, sf::Vector2i(w / FONT_WIDTH - 2, h / FONT_SIZE - 2));
-        
+
         fpsText.setFillColor(sf::Color::Yellow);
         fpsText.setPosition({10.f, 10.f});
     }
 
-    void adjustView()
-    {
+    void adjustView() {
         int cols = std::max(0u, window.getSize().x / FONT_WIDTH - 2);
         int rows = std::max(0u, window.getSize().y / FONT_SIZE - 2);
         text_view.size = {cols, rows};
-        
+
         if (cursor_pos.x < text_view.position.x) {
-            text_view.position.x = cursor_pos.x; // Esce a sx
-        }
-        else if (cursor_pos.x >= text_view.position.x + text_view.size.x) {
-            text_view.position.x = cursor_pos.x - text_view.size.x + 1; // Esce a dx
+            text_view.position.x = cursor_pos.x;  // Esce a sx
+        } else if (cursor_pos.x >= text_view.position.x + text_view.size.x) {
+            text_view.position.x = cursor_pos.x - text_view.size.x + 1;  // Esce a dx
         }
 
         if (cursor_pos.y < text_view.position.y) {
-            text_view.position.y = cursor_pos.y; // Esce in alto
-        }
-        else if (cursor_pos.y >= text_view.position.y + text_view.size.y) {
-            text_view.position.y = cursor_pos.y - text_view.size.y + 1; // Esce in basso
+            text_view.position.y = cursor_pos.y;  // Esce in alto
+        } else if (cursor_pos.y >= text_view.position.y + text_view.size.y) {
+            text_view.position.y = cursor_pos.y - text_view.size.y + 1;  // Esce in basso
         }
     }
 };
@@ -74,41 +65,34 @@ struct State
 
 ////////////////////////////////////////////////////////////
 /// Callback functions
-void handle(const sf::Event::Closed &, State &gs)
-{
+void handle(const sf::Event::Closed&, State& gs) {
     gs.window.close();
 }
 
-void handle(const sf::Event::TextEntered &textEnter, State &gs)
-{
-    if (textEnter.unicode == '\b') // backspace
+void handle(const sf::Event::TextEntered& textEnter, State& gs) {
+    if (textEnter.unicode == '\b')  // backspace
     {
-        if (gs.cursor_pos.x > 0)
-        {
+        if (gs.cursor_pos.x > 0) {
             --gs.cursor_pos.x;
             gs.log[gs.cursor_pos.y].erase(gs.cursor_pos.x, 1);
-        }
-        else if (gs.cursor_pos.y > 0)
-        {
+        } else if (gs.cursor_pos.y > 0) {
             --gs.cursor_pos.y;
             gs.cursor_pos.x = static_cast<int>(gs.log[gs.cursor_pos.y].size());
-            
+
             gs.log[gs.cursor_pos.y].append(gs.log[gs.cursor_pos.y + 1]);
             gs.log.erase(gs.log.begin() + gs.cursor_pos.y + 1);
         }
-    }
-    else if (textEnter.unicode == '\n' || textEnter.unicode == '\r') // enter
+    } else if (textEnter.unicode == '\n' || textEnter.unicode == '\r')  // enter
     {
         const std::string remainder = gs.log[gs.cursor_pos.y].substr(gs.cursor_pos.x);
-        
+
         gs.log[gs.cursor_pos.y].erase(gs.cursor_pos.x);
-        
+
         ++gs.cursor_pos.y;
         gs.cursor_pos.x = 0;
-        
+
         gs.log.emplace(gs.log.begin() + gs.cursor_pos.y, remainder);
-    }
-    else if (textEnter.unicode >= ' ' && textEnter.unicode <= '~') // printable char
+    } else if (textEnter.unicode >= ' ' && textEnter.unicode <= '~')  // printable char
     {
         gs.log[gs.cursor_pos.y].insert(gs.cursor_pos.x, 1, static_cast<char>(textEnter.unicode));
         ++gs.cursor_pos.x;
@@ -117,73 +101,61 @@ void handle(const sf::Event::TextEntered &textEnter, State &gs)
     gs.adjustView();
 }
 
-void handle(const sf::Event::Resized &resized, State &gs)
-{
+void handle(const sf::Event::Resized& resized, State& gs) {
     sf::FloatRect visibleArea({0.f, 0.f}, sf::Vector2f(resized.size));
     gs.window.setView(sf::View(visibleArea));
     gs.adjustView();
 }
 
-void moveCursorLeft(State &gs, int speed)
-{
+void moveCursorLeft(State& gs, int speed) {
     if (gs.cursor_pos.x > 0)
         gs.cursor_pos.x = std::max(0, gs.cursor_pos.x - speed);
-    else if (gs.cursor_pos.y > 0)
-    {
+    else if (gs.cursor_pos.y > 0) {
         --gs.cursor_pos.y;
         gs.cursor_pos.x = static_cast<int>(gs.log[gs.cursor_pos.y].size());
     }
 }
 
-void moveCursorRight(State &gs, int speed)
-{
+void moveCursorRight(State& gs, int speed) {
     if (gs.cursor_pos.x < gs.log[gs.cursor_pos.y].size())
-        gs.cursor_pos.x = std::min(gs.cursor_pos.x + speed, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
-    else if (gs.cursor_pos.y < gs.log.size() - 1)
-    {
+        gs.cursor_pos.x =
+            std::min(gs.cursor_pos.x + speed, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
+    else if (gs.cursor_pos.y < gs.log.size() - 1) {
         ++gs.cursor_pos.y;
         gs.cursor_pos.x = 0;
     }
 }
 
-void moveCursorUp(State &gs, int speed)
-{
-    if (gs.cursor_pos.y > 0)
-    {
+void moveCursorUp(State& gs, int speed) {
+    if (gs.cursor_pos.y > 0) {
         gs.cursor_pos.y = std::max(0, gs.cursor_pos.y - speed);
-        gs.cursor_pos.x = std::min(gs.cursor_pos.x, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
+        gs.cursor_pos.x =
+            std::min(gs.cursor_pos.x, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
     }
 }
 
-void moveCursorDown(State &gs, int speed)
-{
-    if (gs.cursor_pos.y < gs.log.size() - 1)
-    {
+void moveCursorDown(State& gs, int speed) {
+    if (gs.cursor_pos.y < gs.log.size() - 1) {
         gs.cursor_pos.y = std::min(static_cast<int>(gs.log.size() - 1), gs.cursor_pos.y + speed);
-        gs.cursor_pos.x = std::min(gs.cursor_pos.x, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
+        gs.cursor_pos.x =
+            std::min(gs.cursor_pos.x, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
     }
 }
 
-void handle(const sf::Event::KeyPressed &keyPressed, State &gs)
-{
+void handle(const sf::Event::KeyPressed& keyPressed, State& gs) {
     int speed = 1;
-    
-    if (keyPressed.control)
-    {
+
+    if (keyPressed.control) {
         speed = 10;
 
-        if (keyPressed.code == sf::Keyboard::Key::X)
-        {
+        if (keyPressed.code == sf::Keyboard::Key::X) {
             gs.window.close();
             return;
-        }
-        else if (keyPressed.code == sf::Keyboard::Key::S)
-        {
+        } else if (keyPressed.code == sf::Keyboard::Key::S) {
             std::ofstream outFile("output.txt");
 
-            if (!outFile.is_open())
-                return;
-            
+            if (!outFile.is_open()) return;
+
             for (size_t i = 0; i < gs.log.size(); ++i)
                 outFile << gs.log[i] << (i < gs.log.size() - 1 ? "\n" : "");
 
@@ -205,50 +177,46 @@ void handle(const sf::Event::KeyPressed &keyPressed, State &gs)
 }
 
 template <typename T>
-void handle(const T &, State &)
-{
+void handle(const T&, State&) {
     // All unhandled events will end up here
 }
 ///
 ////////////////////////////////////////////////////////////
 
-void doGraphics(State &gs)
-{
-    unsigned lines_to_print = std::min(static_cast<unsigned>(gs.log.size() - gs.text_view.position.y),
-                                       static_cast<unsigned>(gs.text_view.size.y));
+void doGraphics(State& gs) {
+    unsigned lines_to_print =
+        std::min(static_cast<unsigned>(gs.log.size() - gs.text_view.position.y),
+                 static_cast<unsigned>(gs.text_view.size.y));
 
     sf::Text logText{gs.font, "", FONT_SIZE};
 
     gs.window.clear();
 
     // log
-    for (std::size_t i = 0; i < lines_to_print; ++i)
-    {
-        if (gs.text_view.position.x >= gs.log[gs.text_view.position.y + i].size())
-            continue;
+    for (std::size_t i = 0; i < lines_to_print; ++i) {
+        if (gs.text_view.position.x >= gs.log[gs.text_view.position.y + i].size()) continue;
 
         logText.setPosition({FONT_WIDTH, static_cast<float>(i * FONT_SIZE) + FONT_SIZE});
         logText.setString(gs.log[gs.text_view.position.y + i].substr(
-            (size_t)gs.text_view.position.x, (size_t)gs.text_view.size.x)
-        );
+            (size_t)gs.text_view.position.x, (size_t)gs.text_view.size.x));
         gs.window.draw(logText);
     }
 
     // cursor
-    logText.setPosition({static_cast<float>((gs.cursor_pos.x - gs.text_view.position.x + 1) * FONT_WIDTH),
-                         static_cast<float>((gs.cursor_pos.y - gs.text_view.position.y + 1) * FONT_SIZE - 3)});
+    logText.setPosition(
+        {static_cast<float>((gs.cursor_pos.x - gs.text_view.position.x + 1) * FONT_WIDTH),
+         static_cast<float>((gs.cursor_pos.y - gs.text_view.position.y + 1) * FONT_SIZE - 3)});
     logText.setString("_");
     logText.setFillColor(sf::Color::Green);
     gs.window.draw(logText);
 
     // fps
     ++gs.frameCounter;
-    
-    if (gs.fpsClock.getElapsedTime().asSeconds() >= .05f)
-    {
-        gs.fpsText.setString("FPS: " + std::to_string(
-            static_cast<int>(static_cast<float>(gs.frameCounter) / gs.fpsClock.getElapsedTime().asSeconds()
-        )));
+
+    if (gs.fpsClock.getElapsedTime().asSeconds() >= .05f) {
+        gs.fpsText.setString(
+            "FPS: " + std::to_string(static_cast<int>(static_cast<float>(gs.frameCounter) /
+                                                      gs.fpsClock.getElapsedTime().asSeconds())));
         gs.frameCounter = 0;
         gs.fpsClock.restart();
     }
@@ -258,13 +226,12 @@ void doGraphics(State &gs)
     gs.window.display();
 }
 
-int main()
-{
+int main() {
     State gs(800, 600, "Text echo");
-    while (gs.window.isOpen()) // main loop
+    while (gs.window.isOpen())  // main loop
     {
         // event loop and handler through callbacks
-        gs.window.handleEvents([&gs](const auto &event) { handle(event, gs); });
+        gs.window.handleEvents([&gs](const auto& event) { handle(event, gs); });
 
         // Show log
         doGraphics(gs);
