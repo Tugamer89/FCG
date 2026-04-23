@@ -9,4 +9,4 @@ PointerAlignment: Left
 SortIncludes: true
 AllowShortFunctionsOnASingleLine: Inline
 NamespaceIndentation: None
-Standard: c++17
+Standard: c++20
