@@ -27,7 +27,7 @@ jobs:
         sudo apt-get install -y ninja-build libglfw3-dev libgl1-mesa-dev libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev libudev-dev libfreetype6-dev libopenal-dev libflac-dev libogg-dev libvorbis-dev
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4
       with:
         languages: 'cpp'
         queries: security-extended,security-and-quality
@@ -38,6 +38,6 @@ jobs:
         cmake --build build
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4
       with:
         category: "/language:cpp"
