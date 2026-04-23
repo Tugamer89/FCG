@@ -23,16 +23,37 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Install Linux Dependencies
+      - name: Install Dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libglfw3-dev libgl1-mesa-dev libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev libudev-dev
+          sudo apt-get install -y ninja-build libglfw3-dev libgl1-mesa-dev libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev libudev-dev libfreetype6-dev libopenal-dev libflac-dev libogg-dev libvorbis-dev
 
-      - name: Configure and Build
-        run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.20
-          cmake --build build --config Release
+      - name: Install Dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ninja
+
+      - name: Install Dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ninja
+
+      - name: Setup Compiler Cache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: release-${{ matrix.os }}
+          variant: sccache
+
+      - name: Configure CMake
+        run: >
+          cmake -B build 
+          -G Ninja 
+          -DCMAKE_BUILD_TYPE=Release 
+          -DCMAKE_POLICY_VERSION_MINIMUM=3.5 
+          -DCMAKE_C_COMPILER_LAUNCHER=sccache 
+          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+
+      - name: Build
+        run: cmake --build build --config Release
 
       - name: Package Release (Unix - Mac/Linux)
         if: runner.os != 'Windows'
