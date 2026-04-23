@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/Tugamer89/FCG/compare/v2.0.0...v2.0.1) (2026-04-23)
+
+
+### Bug Fixes
+
+* added release version to release files ([6ce3e66](https://github.com/Tugamer89/FCG/commit/6ce3e6605b5081c6af32fb1880ad5574e775a7eb))
+
 ## [2.0.0](https://github.com/Tugamer89/FCG/compare/v1.1.0...v2.0.0) (2026-04-23)
 
 
