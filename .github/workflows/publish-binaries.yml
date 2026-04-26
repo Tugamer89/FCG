@@ -16,6 +16,9 @@ jobs:
   publish-binaries:
     name: Package for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    env:
+      VERSION: ""
+      ASSET_NAME: ""
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
