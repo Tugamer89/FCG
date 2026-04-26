@@ -72,7 +72,7 @@ const std::vector<std::vector<std::string>> levels_data = {
     {// Livello 3: Muro solido e indistruttibili
      "0333333333330", "0220022200220", "0110011100110", "0440000000440", "0110000000110"},
     {// Livello 4: The Gauntlet
-     "4333333333334", "4222444222004", "4111141111104", "0040040040000", "4440000000444"},
+     "4333333333334", "4222244422224", "4111114111114", "0040004000400", "4440000000444"},
 };
 
 //////////////////////
@@ -157,7 +157,7 @@ struct Wall {
     Wall() = default;
     void load_level(size_t level_idx);
     void draw(sf::RenderWindow& window) const;
-    bool hit(Ball& ball, std::vector<Particle>& particles);
+    int hit(Ball& ball, std::vector<Particle>& particles);
     [[nodiscard]] bool is_cleared() const;
 };
 
@@ -177,7 +177,7 @@ struct Paddle {
 
 struct Ball {
     float radius = ball_radius;
-    sf::Vector2f pos = {window_width / 2.f, window_height - paddle_size.y - ball_radius - 20.f};
+    sf::Vector2f pos = {window_width / 2.f, window_height - paddle_size.y - ball_radius - 10.f};
     float speed = ball_initial_speed;
     sf::Angle angle = get_random_start_angle();
     sf::Texture texture = sf::Texture(ball_png, ball_png_len);
@@ -315,11 +315,11 @@ void Wall::draw(sf::RenderWindow& window) const {
     for (const auto& block : blocks) block.draw(window);
 }
 
-bool Wall::hit(Ball& ball, std::vector<Particle>& particles) {
+int Wall::hit(Ball& ball, std::vector<Particle>& particles) {
     for (auto& block : blocks) {
-        if (block.hp > 0 && block.hit(ball, particles)) return true;
+        if (block.hp > 0 && block.hit(ball, particles)) return block.hp < 4 ? 10 : 0;
     }
-    return false;
+    return -1;
 }
 
 bool Wall::is_cleared() const {
@@ -411,11 +411,9 @@ bool Paddle::strike(Ball& ball) const {
     float normalized_offset = hit_offset / (size.x / 2.f);
     normalized_offset = std::clamp(normalized_offset, -1.f, 1.f);
 
-    const float MAX_BOUNCE_ANGLE = sf::degrees(60.f).asRadians();
-    float bounce_angle = normalized_offset * MAX_BOUNCE_ANGLE;
-
-    sf::Vector2f new_dir(std::sin(bounce_angle), -std::cos(bounce_angle));
-    ball.angle = new_dir.angle();
+    const sf::Angle MAX_BOUNCE_ANGLE = sf::degrees(75.f);
+    sf::Angle bounce_angle = MAX_BOUNCE_ANGLE * normalized_offset;
+    ball.angle = bounce_angle - sf::degrees(90.f);
 
     float paddle_center_y = pos.y + size.y / 2.f;
 
@@ -436,7 +434,7 @@ void State::reset_ball() {
     pause = true;
     ball.speed = ball_initial_speed;
     ball.angle = get_random_start_angle();
-    ball.pos = {window_width / 2.f, window_height - paddle_size.y - ball_radius - 20.f};
+    ball.pos = {window_width / 2.f, window_height - paddle_size.y - ball_radius - 10.f};
     paddle.pos = {(window_width - paddle_size.x) / 2.f, window_height - paddle_size.y - 10.f};
     move_paddle_left = false;
     move_paddle_right = false;
@@ -501,8 +499,10 @@ void State::collisions() {
         ball.speed = std::min(ball.speed + ball_speed_increment * 0.1f, ball_max_speed);
     }
 
-    if (wall.hit(ball, particles)) {
-        score += 10;
+    int points = wall.hit(ball, particles);
+
+    if (points >= 0) {
+        score += points;
         ball.speed = std::min(ball.speed + ball_speed_increment, ball_max_speed);
 
         if (wall.is_cleared()) {
