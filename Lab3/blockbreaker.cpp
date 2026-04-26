@@ -408,8 +408,7 @@ bool Paddle::strike(Ball& ball) const {
 
     float paddle_center_x = pos.x + size.x / 2.f;
     float hit_offset = ball.pos.x - paddle_center_x;
-    float normalized_offset = hit_offset / (size.x / 2.f);
-    normalized_offset = std::clamp(normalized_offset, -1.f, 1.f);
+    float normalized_offset = hit_offset / ((size.x + ball.radius) / 2.f);
 
     const sf::Angle MAX_BOUNCE_ANGLE = sf::degrees(75.f);
     sf::Angle bounce_angle = MAX_BOUNCE_ANGLE * normalized_offset;
