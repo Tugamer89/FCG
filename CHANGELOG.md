@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/Tugamer89/FCG/compare/v2.1.0...v2.1.1) (2026-04-26)
+
+
+### Bug Fixes
+
+* **paddle:** correct normalized offset logic for ball bounce ([72ff2e9](https://github.com/Tugamer89/FCG/commit/72ff2e9972f9e6d738c38e6844b2965bd7e08fd9))
+
 ## [2.1.0](https://github.com/Tugamer89/FCG/compare/v2.0.1...v2.1.0) (2026-04-26)
 
 
