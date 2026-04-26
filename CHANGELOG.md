@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/Tugamer89/FCG/compare/v2.0.1...v2.1.0) (2026-04-26)
+
+
+### Features
+
+* Improved ball physics, scoring logic, and levels ([6c54d19](https://github.com/Tugamer89/FCG/commit/6c54d19dcd2fc75b716284be39c85bdfd798db0d))
+
 ## [2.0.1](https://github.com/Tugamer89/FCG/compare/v2.0.0...v2.0.1) (2026-04-23)
 
 
