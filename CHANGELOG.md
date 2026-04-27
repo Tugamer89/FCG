@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.0](https://github.com/Tugamer89/FCG/compare/v2.1.1...v2.2.0) (2026-04-27)
+
+
+### Features
+
+* added shaders ([2511821](https://github.com/Tugamer89/FCG/commit/25118214e033384944b9fdd450f38c37194383b5))
+* Lab4 initial commit ([e89ddfa](https://github.com/Tugamer89/FCG/commit/e89ddfaa6d8c9fa99fb064bb2b51ac0237eb5aa7))
+
 ## [2.1.1](https://github.com/Tugamer89/FCG/compare/v2.1.0...v2.1.1) (2026-04-26)
 
 
