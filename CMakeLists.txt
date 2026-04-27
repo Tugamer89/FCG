@@ -35,6 +35,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_subdirectory(Lab1)
 add_subdirectory(Lab2)
 add_subdirectory(Lab3)
+add_subdirectory(Lab4)
 
 # Installation & Packing
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/resources DESTINATION bin)

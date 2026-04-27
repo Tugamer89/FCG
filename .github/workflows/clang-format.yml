@@ -25,7 +25,7 @@ jobs:
 
       - name: Run Clang-Format
         run: |
-          find . -type d \( -name build -o -name .git \) -prune -o \( -name '*.cpp' -o -name '*.hpp' -o -name '*.c' -o -name '*.h' \) -exec clang-format-15 -i {} +
+          find . -type d \( -name build -o -name .git \) -prune -o \( -name '*.cpp' -o -name '*.hpp' -o -name '*.c' -o -name '*.h' -o -name '*.cc' \) -exec clang-format-15 -i {} +
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v7
