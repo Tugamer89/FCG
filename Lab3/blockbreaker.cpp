@@ -257,11 +257,21 @@ bool Block::hit(Ball& ball, std::vector<Particle>& particles) {
     float overlap_y = (size.y / 2.f + ball.radius) - std::abs(diff.y);
 
     if (overlap_x > 0.f && overlap_y > 0.f) {
+        sf::Vector2f dir(1.f, ball.angle);
+
         if (overlap_x < overlap_y) {
-            ball.pos.x += (diff.x > 0.f ? overlap_x : -overlap_x);
+            float shift_x = (diff.x > 0.f ? overlap_x : -overlap_x);
+            float shift_y = (dir.x != 0.f) ? shift_x * (dir.y / dir.x) : 0.f;
+            
+            ball.pos.x += shift_x;
+            ball.pos.y += shift_y;
             ball.angle = reflect_horizontal(ball.angle);
         } else {
-            ball.pos.y += (diff.y > 0.f ? overlap_y : -overlap_y);
+            float shift_y = (diff.y > 0.f ? overlap_y : -overlap_y);
+            float shift_x = (dir.y != 0.f) ? shift_y * (dir.x / dir.y) : 0.f;
+            
+            ball.pos.x += shift_x;
+            ball.pos.y += shift_y;
             ball.angle = reflect_vertical(ball.angle);
         }
 
@@ -405,16 +415,21 @@ bool Paddle::strike(Ball& ball) const {
 
     sf::Vector2f paddle_center = pos + size / 2.f;
     sf::Vector2f diff = ball.pos - paddle_center;
+    sf::Vector2f dir(1.f, ball.angle);
 
     float overlap_x = (size.x / 2.f + ball.radius) - std::abs(diff.x);
     float overlap_y = (size.y / 2.f + ball.radius) - std::abs(diff.y);
 
     if (overlap_x < overlap_y) {
-        ball.pos.x += (diff.x > 0.f ? overlap_x : -overlap_x);
+        float shift_x = (diff.x > 0.f ? overlap_x : -overlap_x);
+        float shift_y = (dir.x != 0.f) ? shift_x * (dir.y / dir.x) : 0.f;
+        
+        ball.pos.x += shift_x;
+        ball.pos.y += shift_y;
         ball.angle = reflect_horizontal(ball.angle);
 
         if (ball.pos.y > paddle_center.y) {
-            if (sf::Vector2f(1.f, ball.angle).y < 0.f) {
+            if (dir.y < 0.f) {
                 ball.angle = reflect_vertical(ball.angle);
             }
             return false;
