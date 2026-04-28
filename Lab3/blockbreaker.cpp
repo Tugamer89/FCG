@@ -264,7 +264,7 @@ bool Block::hit(Ball& ball, std::vector<Particle>& particles) {
             ball.pos.y += (diff.y > 0.f ? overlap_y : -overlap_y);
             ball.angle = reflect_vertical(ball.angle);
         }
-        
+
         if (hp < 4) {  // 4 = indistruttibile
             hp--;
             if (hp > 0) {
