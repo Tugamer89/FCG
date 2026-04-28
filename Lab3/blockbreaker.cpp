@@ -146,7 +146,6 @@ struct Block {
     }
 
     void draw(sf::RenderWindow& window) const;
-    [[nodiscard]] bool is_inside(sf::Vector2f point) const;
     bool hit(Ball& ball, std::vector<Particle>& particles);
     void spawn_particles(std::vector<Particle>& particles) const;
 };
@@ -247,33 +246,25 @@ void Block::draw(sf::RenderWindow& window) const {
     window.draw(shape);
 }
 
-bool Block::is_inside(sf::Vector2f point) const {
-    return point.x >= pos.x && point.x <= pos.x + size.x && point.y >= pos.y &&
-           point.y <= pos.y + size.y;
-}
-
 bool Block::hit(Ball& ball, std::vector<Particle>& particles) {
     if (hp <= 0) return false;
 
-    sf::Vector2f top = {ball.pos.x, ball.pos.y - ball.radius};
-    sf::Vector2f bottom = {ball.pos.x, ball.pos.y + ball.radius};
-    sf::Vector2f left = {ball.pos.x - ball.radius, ball.pos.y};
-    sf::Vector2f right = {ball.pos.x + ball.radius, ball.pos.y};
+    sf::Vector2f block_center = pos + size / 2.f;
+    sf::Vector2f diff = ball.pos - block_center;
 
-    sf::Vector2f ball_dir(1.f, ball.angle);
+    // Minkowski difference approach
+    float overlap_x = (size.x / 2.f + ball.radius) - std::abs(diff.x);
+    float overlap_y = (size.y / 2.f + ball.radius) - std::abs(diff.y);
 
-    bool hit_vertical =
-        (is_inside(top) && ball_dir.y < 0.f) || (is_inside(bottom) && ball_dir.y > 0.f);
-    bool hit_horizontal =
-        (is_inside(left) && ball_dir.x < 0.f) || (is_inside(right) && ball_dir.x > 0.f);
-
-    if (hit_vertical) {
-        ball.angle = reflect_vertical(ball.angle);
-    } else if (hit_horizontal) {
-        ball.angle = reflect_horizontal(ball.angle);
-    }
-
-    if (hit_vertical || hit_horizontal) {
+    if (overlap_x > 0.f && overlap_y > 0.f) {
+        if (overlap_x < overlap_y) {
+            ball.pos.x += (diff.x > 0.f ? overlap_x : -overlap_x);
+            ball.angle = reflect_horizontal(ball.angle);
+        } else {
+            ball.pos.y += (diff.y > 0.f ? overlap_y : -overlap_y);
+            ball.angle = reflect_vertical(ball.angle);
+        }
+        
         if (hp < 4) {  // 4 = indistruttibile
             hp--;
             if (hp > 0) {
@@ -397,32 +388,49 @@ void Paddle::move_right(float dt) {
     pos.x += speed * dt;
 }
 
-bool Paddle::hit(const Ball& ball) const {
+[[nodiscard]] bool Paddle::hit(const Ball& ball) const {
     if (sf::Vector2f(1.f, ball.angle).y < 0.f) return false;
-    return ball.pos.y + ball.radius >= pos.y && ball.pos.y - ball.radius <= pos.y + size.y &&
-           ball.pos.x + ball.radius >= pos.x && ball.pos.x - ball.radius <= pos.x + size.x;
+
+    sf::Vector2f paddle_center = pos + size / 2.f;
+    sf::Vector2f diff = ball.pos - paddle_center;
+
+    float overlap_x = (size.x / 2.f + ball.radius) - std::abs(diff.x);
+    float overlap_y = (size.y / 2.f + ball.radius) - std::abs(diff.y);
+
+    return overlap_x > 0.f && overlap_y > 0.f;
 }
 
 bool Paddle::strike(Ball& ball) const {
     if (!hit(ball)) return false;
 
-    float paddle_center_x = pos.x + size.x / 2.f;
-    float hit_offset = ball.pos.x - paddle_center_x;
-    float normalized_offset = hit_offset / ((size.x + ball.radius) / 2.f);
+    sf::Vector2f paddle_center = pos + size / 2.f;
+    sf::Vector2f diff = ball.pos - paddle_center;
 
-    const sf::Angle MAX_BOUNCE_ANGLE = sf::degrees(75.f);
-    sf::Angle bounce_angle = MAX_BOUNCE_ANGLE * normalized_offset;
-    ball.angle = bounce_angle - sf::degrees(90.f);
+    float overlap_x = (size.x / 2.f + ball.radius) - std::abs(diff.x);
+    float overlap_y = (size.y / 2.f + ball.radius) - std::abs(diff.y);
 
-    float paddle_center_y = pos.y + size.y / 2.f;
+    if (overlap_x < overlap_y) {
+        ball.pos.x += (diff.x > 0.f ? overlap_x : -overlap_x);
+        ball.angle = reflect_horizontal(ball.angle);
 
-    if (ball.pos.y > paddle_center_y) {
-        ball.angle = reflect_vertical(ball.angle);
-        return false;
-    } else {
-        ball.pos.y = pos.y - ball.radius;
+        if (ball.pos.y > paddle_center.y) {
+            if (sf::Vector2f(1.f, ball.angle).y < 0.f) {
+                ball.angle = reflect_vertical(ball.angle);
+            }
+            return false;
+        }
         return true;
     }
+
+    ball.pos.y -= overlap_y;
+
+    float normalized_offset = std::clamp(diff.x / ((size.x + ball.radius) / 2.f), -1.f, 1.f);
+    const sf::Angle MAX_BOUNCE_ANGLE = sf::degrees(75.f);
+    sf::Angle bounce_angle = MAX_BOUNCE_ANGLE * normalized_offset;
+
+    ball.angle = bounce_angle - sf::degrees(90.f);
+
+    return true;
 }
 
 void Ball::move(float dt) {
@@ -462,22 +470,21 @@ void State::advance_level() {
 }
 
 void State::field_limits() {
-    if (paddle.pos.x < 0.f) paddle.pos.x = 0.f;
-    if (paddle.pos.x > window_width - paddle.size.x) paddle.pos.x = window_width - paddle.size.x;
+    paddle.pos.x = std::clamp(paddle.pos.x, 0.f, window_width - paddle.size.x);
 
     sf::Vector2f ball_dir(1.f, ball.angle);
 
-    if (ball.pos.x - ball.radius < 0.f && ball_dir.x < 0.f) {
+    if (ball.pos.x - ball.radius < 0.f) {
         ball.pos.x = ball.radius;
-        ball.angle = reflect_horizontal(ball.angle);
-    } else if (ball.pos.x + ball.radius > window_width && ball_dir.x > 0.f) {
+        if (ball_dir.x < 0.f) ball.angle = reflect_horizontal(ball.angle);
+    } else if (ball.pos.x + ball.radius > window_width) {
         ball.pos.x = window_width - ball.radius;
-        ball.angle = reflect_horizontal(ball.angle);
+        if (ball_dir.x > 0.f) ball.angle = reflect_horizontal(ball.angle);
     }
 
-    if (ball.pos.y - ball.radius < 0.f && ball_dir.y < 0.f) {
+    if (ball.pos.y - ball.radius < 0.f) {
         ball.pos.y = ball.radius;
-        ball.angle = reflect_vertical(ball.angle);
+        if (ball_dir.y < 0.f) ball.angle = reflect_vertical(ball.angle);
     }
 
     if (ball.pos.y + ball.radius > window_height) {
