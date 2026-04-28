@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.3.0](https://github.com/Tugamer89/FCG/compare/v2.2.0...v2.3.0) (2026-04-28)
+
+
+### Features
+
+* added trajectory rewind ([3716409](https://github.com/Tugamer89/FCG/commit/37164091383109773fb5828fefbd4d704d1c75d2))
+
+
+### Code Refactoring
+
+* **lab3:** implement AABB collision detection ([1a896e6](https://github.com/Tugamer89/FCG/commit/1a896e670776b4c4f7bb3871d025c25ed7f1386a))
+
 ## [2.2.0](https://github.com/Tugamer89/FCG/compare/v2.1.1...v2.2.0) (2026-04-27)
 
 
