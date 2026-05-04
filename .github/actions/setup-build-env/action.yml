@@ -16,8 +16,10 @@ runs:
       if: inputs.os == 'Linux'
       shell: bash
       run: |
-        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-        sudo apt-get update
+        sudo apt update
+        sudo apt install software-properties-common
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+        sudo apt update
         
         sudo apt-get install -y --no-install-recommends ninja-build \
           libx11-dev libxrandr-dev libxi-dev libxcursor-dev libudev-dev \
