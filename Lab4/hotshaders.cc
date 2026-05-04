@@ -96,10 +96,9 @@ struct Scene {
     }
 
     // // when data will be dynamically loaded, reloading will be useful
-    // void reload ()
-    // {
-    //     clean ();
-    //     load ();
+    // void reload() {
+    //     clean();
+    //     load();
     // }
 };
 
@@ -107,9 +106,25 @@ struct Scene {
 // Draw!!! //
 /////////////
 
-void draw(Scene& scene, Shaders& shaders) {
+float accumulator = 0.0;
+float next_red = 0.8;
+
+void draw(Scene& scene, Shaders& shaders, float elapsed) {
     // clear the buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // get the location of the uniform variable
+    GLint loc = glGetUniformLocation(shaders.program, "foreground");
+    
+    accumulator += elapsed;
+    if (accumulator > 2.0) {
+        accumulator = 0.0;
+    }
+
+    if (accumulator > 1.0) {
+        glUniform3f(loc, next_red, 0.4, 0.0);
+    } else {
+        glUniform3f(loc, 0.0, 0.4, 0.8);
+    }
 
     // Draw points 0-3 from the currently bound VAO with current in-use shader
     glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -141,9 +156,6 @@ int main() {
     // create a default scene
     Scene scene;
 
-    // create default shaders
-    // Shaders shaders;
-
     // load shaders from files
     Shaders shaders(vertLoc, fragLoc);
 
@@ -156,6 +168,8 @@ int main() {
     // Main loop //
     ///////////////
 
+    sf::Clock clock;
+
     bool running = true;
     while (running) {
         while (const std::optional event = window.pollEvent()) {
@@ -167,7 +181,7 @@ int main() {
                 handle(*key_pressed, scene, shaders, running);
         }
 
-        draw(scene, shaders);
+        draw(scene, shaders, clock.restart().asSeconds());
 
         window.display();
     }
