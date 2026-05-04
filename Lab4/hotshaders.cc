@@ -114,7 +114,7 @@ void draw(Scene& scene, Shaders& shaders, float elapsed) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // get the location of the uniform variable
     GLint loc = glGetUniformLocation(shaders.program, "foreground");
-    
+
     accumulator += elapsed;
     if (accumulator > 2.0) {
         accumulator = 0.0;
