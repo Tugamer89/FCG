@@ -43,6 +43,7 @@ jobs:
       with:
         category: "/language:cpp"
         output: sarif-results
+        upload: false
     
     - name: Filter SARIF
       uses: advanced-security/filter-sarif@v1
