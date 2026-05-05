@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.4.0](https://github.com/Tugamer89/FCG/compare/v2.3.0...v2.4.0) (2026-05-05)
+
+
+### Features
+
+* added alternating shader ([f31554b](https://github.com/Tugamer89/FCG/commit/f31554b7fc1d67e5fabcdb5b1edcfedcbc9356c0))
+* **Lab4:** added base code for part 2 ([7b3fdf0](https://github.com/Tugamer89/FCG/commit/7b3fdf054253b5b8e6b13507d0928de6e3029fad))
+
+
+### Bug Fixes
+
+* **ci:** added .vert and .frag to formatter ([83fe46b](https://github.com/Tugamer89/FCG/commit/83fe46b972904bd4a20b3ebb5f642f6dd837e348))
+* **ci:** fixed double uploading ([9e3f834](https://github.com/Tugamer89/FCG/commit/9e3f8343a022900132bc3b116ceebc22f7ca3cc5))
+* **ci:** improved code ql analysis ([67bd345](https://github.com/Tugamer89/FCG/commit/67bd345f103121d233b62108aa2acc2dc606f1c7))
+* **ci:** improved codeql analysis ([bf45885](https://github.com/Tugamer89/FCG/commit/bf458855858b69e04bb8f84c11d5c542799ece52))
+* **ci:** improved linux requirements installation ([3ad9523](https://github.com/Tugamer89/FCG/commit/3ad9523472259721fbbf3980d9f1abc3dae78b89))
+* **ci:** improved requirements installation ([fa9e62c](https://github.com/Tugamer89/FCG/commit/fa9e62c10a2dc82ab7286a6df35901eb19e8083e))
+
 ## [2.3.0](https://github.com/Tugamer89/FCG/compare/v2.2.0...v2.3.0) (2026-04-28)
 
 
