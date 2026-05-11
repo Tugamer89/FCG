@@ -104,27 +104,18 @@ struct Scene {
             7, 6, 5,  // 4th face
         };
 
-        // we want just one buffer, and we retrieve the name OpenGL assigns to it.
         glGenBuffers(1, &vbo);
-        // bind it as the current ARRAY_BUFFER
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        // transfer data from CPU RAM to GPU RAM.
         glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(float), points.data(), GL_STATIC_DRAW);
 
-        // we want just one buffer container, and we retrieve the name OpenGL assigns to it.
         glGenVertexArrays(1, &vao);
-        // bind it as the current vao.
         glBindVertexArray(vao);
 
-        // we describe how the attribute 0 is organized inside our buffer
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-        // we enable attribute 0 to be passed as input to the vertex shader
         glEnableVertexAttribArray(0);
 
-        // we describe how the attribute 1 is organized inside our buffer
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
                               (void*)(3 * sizeof(float)));
-        // we enable attribute 0 to be passed as input to the vertex shader
         glEnableVertexAttribArray(1);
 
         glGenBuffers(1, &ebo);
@@ -187,22 +178,16 @@ int main() {
     Setup setup;
     sf::Window& window = *setup.window;
 
-    // create a default scene
     Scene scene;
-
-    // load shaders from files
     Shaders shaders(vertLoc, fragLoc);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    // Put the shader program, and the VAO, in focus in OpenGL's state machine
-    // these can changed dynamically as needed in the loop too.
     glUseProgram(shaders.program);
     glBindVertexArray(scene.vao);
 
-    // get the location of the uniform variable
     scene.mod_color_location = glGetUniformLocation(shaders.program, "mod_color");
 
     ///////////////
