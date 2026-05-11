@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.0](https://github.com/Tugamer89/FCG/compare/v2.4.0...v2.5.0) (2026-05-11)
+
+
+### Features
+
+* **Lab4:** added new steps ([9290670](https://github.com/Tugamer89/FCG/commit/929067068701db5b83f09340c12d705c6aae1df5))
+
 ## [2.4.0](https://github.com/Tugamer89/FCG/compare/v2.3.0...v2.4.0) (2026-05-05)
 
 
