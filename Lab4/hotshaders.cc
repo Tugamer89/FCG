@@ -57,8 +57,14 @@ struct Setup {
 
 struct Scene {
     std::vector<float> points;
+    std::vector<unsigned int> indices;
     GLuint vbo;
+    GLuint ebo;
     GLuint vao;
+
+    GLint mod_color_location;
+    static constexpr float darken[3] = {0.2, 0.2, 0.2};
+    static constexpr float lighten[3] = {-0.2, -0.2, -0.2};
 
     Scene() { load(); }
     ~Scene() { clean(); }
@@ -66,12 +72,38 @@ struct Scene {
     void load() {
         // coordinates in clip space! no transformation involved
         points = {
-            0.0f,  0.5f,  0.0f,  // x,y,z of first point.
-            0.5f,  -0.5f, 0.0f,  // x,y,z of second point.
-            -0.5f, -0.5f, 0.0f   // x,y,z of third point.
+            -0.7f, 0.5f,  0.0f,  // x,y,x
+            0.2f,  0.2f,  0.2f,  // r,g,b
+
+            0.0f,  0.5f,  0.0f,  // x,y,z
+            0.8f,  0.0f,  0.0f,  // r,g,b
+
+            0.5f,  -0.5f, 0.0f,  // x,y,z
+            0.0f,  0.8f,  0.0f,  // r,g,b
+
+            -0.5f, -0.5f, 0.0f,  // x,y,z
+            0.0f,  0.0f,  0.8f,  // r,g,b
+
+            0.7f,  0.5f,  0.0f,  // x,y,z
+            0.8f,  0.8f,  0.8f,  // r,g,b
+
+            0.7f,  -0.1f, 0.5f,  // x,y,z
+            0.5f,  0.5f,  0.5f,  // r,g,b
+
+            -0.7f, -0.1f, 0.5f,  // x,y,z
+            0.5f,  0.5f,  0.5f,  // r,g,b
+
+            0.0f,  0.2f,  0.5f,  // x,y,z
+            0.5f,  0.5f,  0.5f,  // r,g,b
         };
 
-        vbo = 0;
+        indices = {
+            3, 1, 0,  // 1st face
+            3, 2, 1,  // 2nd face
+            1, 2, 4,  // 3rd face
+            7, 6, 5,  // 4th face
+        };
+
         // we want just one buffer, and we retrieve the name OpenGL assigns to it.
         glGenBuffers(1, &vbo);
         // bind it as the current ARRAY_BUFFER
@@ -79,27 +111,32 @@ struct Scene {
         // transfer data from CPU RAM to GPU RAM.
         glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(float), points.data(), GL_STATIC_DRAW);
 
-        vao = 0;
         // we want just one buffer container, and we retrieve the name OpenGL assigns to it.
         glGenVertexArrays(1, &vao);
         // bind it as the current vao.
         glBindVertexArray(vao);
+
         // we describe how the attribute 0 is organized inside our buffer
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
         // we enable attribute 0 to be passed as input to the vertex shader
         glEnableVertexAttribArray(0);
+
+        // we describe how the attribute 1 is organized inside our buffer
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                              (void*)(3 * sizeof(float)));
+        // we enable attribute 0 to be passed as input to the vertex shader
+        glEnableVertexAttribArray(1);
+
+        glGenBuffers(1, &ebo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(),
+                     GL_STATIC_DRAW);
     }
 
     void clean() {
         glDeleteVertexArrays(1, &vao);
         glDeleteBuffers(1, &vbo);
     }
-
-    // // when data will be dynamically loaded, reloading will be useful
-    // void reload() {
-    //     clean();
-    //     load();
-    // }
 };
 
 /////////////
@@ -107,27 +144,24 @@ struct Scene {
 /////////////
 
 float accumulator = 0.0;
-float next_red = 0.8;
 
 void draw(Scene& scene, Shaders& shaders, float elapsed) {
     // clear the buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // get the location of the uniform variable
-    GLint loc = glGetUniformLocation(shaders.program, "foreground");
 
     accumulator += elapsed;
-    if (accumulator > 2.0) {
-        accumulator = 0.0;
-    }
 
-    if (accumulator > 1.0) {
-        glUniform3f(loc, next_red, 0.4, 0.0);
+    if (accumulator < 1.f) {
+        glUniform3fv(scene.mod_color_location, 1, scene.lighten);
+    } else if (accumulator < 2.f || (accumulator >= 3.f && accumulator < 4.f)) {
+        glUniform3f(scene.mod_color_location, 0.f, 0.f, 0.f);
+    } else if (accumulator < 3.f) {
+        glUniform3fv(scene.mod_color_location, 1, scene.darken);
     } else {
-        glUniform3f(loc, 0.0, 0.4, 0.8);
+        accumulator = 0.f;
     }
 
-    // Draw points 0-3 from the currently bound VAO with current in-use shader
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawElements(GL_TRIANGLES, scene.indices.size(), GL_UNSIGNED_INT, (void*)0);
 }
 
 ////////////////////
@@ -159,10 +193,17 @@ int main() {
     // load shaders from files
     Shaders shaders(vertLoc, fragLoc);
 
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
     // Put the shader program, and the VAO, in focus in OpenGL's state machine
     // these can changed dynamically as needed in the loop too.
     glUseProgram(shaders.program);
     glBindVertexArray(scene.vao);
+
+    // get the location of the uniform variable
+    scene.mod_color_location = glGetUniformLocation(shaders.program, "mod_color");
 
     ///////////////
     // Main loop //
