@@ -21,11 +21,11 @@ jobs:
       ASSET_NAME: ""
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-2025-vs2026, macos-latest]
         include:
           - os: ubuntu-latest
             os_suffix: linux
-          - os: windows-latest
+          - os: windows-2025-vs2026
             os_suffix: windows
           - os: macos-latest
             os_suffix: macos
