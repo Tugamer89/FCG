@@ -52,9 +52,9 @@ jobs:
           cmake -B build 
           -G Ninja 
           -DCMAKE_BUILD_TYPE=Release 
-          -DCMAKE_POLICY_VERSION_MINIMUM=3.5 
           -DCMAKE_C_COMPILER_LAUNCHER=sccache 
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+          -DINSTALL_MANPAGES=OFF
 
       - name: Build
         run: cmake --build build --config Release

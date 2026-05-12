@@ -35,7 +35,7 @@ jobs:
 
     - name: Build Project
       run: |
-        cmake -B build -G Ninja -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+        cmake -B build -G Ninja -DINSTALL_MANPAGES=OFF
         cmake --build build
 
     - name: Perform CodeQL Analysis
