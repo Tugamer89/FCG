@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.6.0](https://github.com/Tugamer89/FCG/compare/v2.5.0...v2.6.0) (2026-05-12)
+
+
+### Features
+
+* **cmake:** automate shader copying to output directory ([2c2c4f1](https://github.com/Tugamer89/FCG/commit/2c2c4f1735042e16a764c716a5ecb39189efe383))
+
+
+### Bug Fixes
+
+* **cmake:** statically link mingw libraries on windows ([35ca94b](https://github.com/Tugamer89/FCG/commit/35ca94ba20ef7d8239719ef969aa2d3021fe6406))
+
 ## [2.5.0](https://github.com/Tugamer89/FCG/compare/v2.4.0...v2.5.0) (2026-05-11)
 
 
