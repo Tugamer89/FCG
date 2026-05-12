@@ -4,8 +4,8 @@
 #include <cstdlib>
 #include <iostream>
 
-const char* vertLoc = "Lab4/vertex.vert";
-const char* fragLoc = "Lab4/fragment.frag";
+const char* vertLoc = "resources/shaders/Lab4/vertex.vert";
+const char* fragLoc = "resources/shaders/Lab4/fragment.frag";
 
 struct Setup {
     sf::Window* window;
