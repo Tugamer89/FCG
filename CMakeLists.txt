@@ -8,11 +8,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin)
 
 include(FetchContent)
 FetchContent_Declare(SFML
-    GIT_REPOSITORY https://github.com/SFML/SFML.git
-    GIT_TAG 3.1.0
-    GIT_SHALLOW ON
-    EXCLUDE_FROM_ALL
-    SYSTEM)
+  GIT_REPOSITORY https://github.com/SFML/SFML.git
+  GIT_TAG 3.1.0
+  GIT_SHALLOW ON
+  EXCLUDE_FROM_ALL
+  SYSTEM)
 FetchContent_MakeAvailable(SFML)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -30,6 +30,10 @@ target_compile_options(project_warnings INTERFACE
 
 set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+if(MINGW)
+  add_link_options(-static -static-libgcc -static-libstdc++)
+endif()
 
 # Laboratori
 add_subdirectory(Lab1)
