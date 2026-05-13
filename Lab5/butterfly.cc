@@ -145,13 +145,6 @@ struct Scene {
         glDeleteBuffers(1, &vbo);
     }
 
-    // // when data will be dynamically loaded, reloading will be useful
-    // void reload ()
-    // {
-    //     clean ();
-    //     load ();
-    // }
-
     void drag(sf::Vector2i mouse_pos) {
         static sf::Vector2f prev_pos = {0, 0};
         sf::Vector2f pos(mouse_pos);
