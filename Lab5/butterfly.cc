@@ -1,8 +1,8 @@
 #define GLAD_GL_IMPLEMENTATION  // Necessary for the header-only version.
 #include <SFML/Window.hpp>
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
-#include <algorithm>
 
 #include "glad/gl.h"
 
@@ -38,8 +38,8 @@ struct Setup {
         sf::Vector2i centerPosition((desktop.size.x - window_width) / 2,
                                     (desktop.size.y - window_height) / 2);
 
-        window = new sf::Window(sf::VideoMode({window_width, window_height}), "SFML + OpenGL", sf::Style::Default,
-                                sf::State::Windowed, settings);
+        window = new sf::Window(sf::VideoMode({window_width, window_height}), "SFML + OpenGL",
+                                sf::Style::Default, sf::State::Windowed, settings);
         window->setPosition(centerPosition);
         window->setVerticalSyncEnabled(true);
 
@@ -92,21 +92,20 @@ struct Scene {
         // we define a very simple shape, resembling a butterfly:
         // two non-intersecting triangles joined by a single vertex
         // this shape is not closed, so culling will be disabled
-        points = {
-            0.0,  0.5,  0.0,  // red/magenta mix (kind of...), top center
-            0.8,  0.0,  0.4,
+        points = {0.0,  0.5,  0.0,  // red/magenta mix (kind of...), top center
+                  0.8,  0.0,  0.4,
 
-            0.5,  -0.5, 0.3,  // green, bottom right, back
-            0.0,  0.8,  0.0,
+                  0.5,  -0.5, 0.3,  // green, bottom right, back
+                  0.0,  0.8,  0.0,
 
-            -0.5, -0.5, 0.3,  // blue, bottom left, back
-            0.0,  0.0,  0.8,
+                  -0.5, -0.5, 0.3,  // blue, bottom left, back
+                  0.0,  0.0,  0.8,
 
-            0.5,  -0.5, -0.3,  // cyan, bottom right, front
-            0.0,  0.8,  0.8,
+                  0.5,  -0.5, -0.3,  // cyan, bottom right, front
+                  0.0,  0.8,  0.8,
 
-            -0.5, -0.5, -0.3,  // yellow, bottom left, front
-            0.8,  0.8,  0.0};
+                  -0.5, -0.5, -0.3,  // yellow, bottom left, front
+                  0.8,  0.8,  0.0};
 
         // 2 faces, 3 indices per face, CCW order
         indices = {0, 3, 4, 0, 2, 1};
@@ -171,11 +170,8 @@ struct Scene {
         theta_deg = std::clamp(theta_deg, -90.f, 90.f);
     }
 
-    void update_uniforms() {
-        return;
-    }
+    void update_uniforms() { return; }
 };
-
 
 /////////////
 // Draw!!! //
