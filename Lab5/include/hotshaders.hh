@@ -105,7 +105,7 @@ class Shaders {
         glShaderSource(vertex, 1, vertex_source_ptr, NULL);
         glCompileShader(vertex);
         // check for errors
-        params = -1;
+        params = false;
         glGetShaderiv(vertex, GL_COMPILE_STATUS, &params);
         if (!params) {
             std::cerr << "Error compiling vertex shader: "
@@ -118,6 +118,7 @@ class Shaders {
         glShaderSource(fragment, 1, fragment_source_ptr, NULL);
         glCompileShader(fragment);
         // check for errors
+        params = false;
         glGetShaderiv(fragment, GL_COMPILE_STATUS, &params);
         if (!params) {
             std::cerr << "Error compiling fragment shader: "
@@ -131,6 +132,7 @@ class Shaders {
         glAttachShader(program, vertex);
         glLinkProgram(program);
         // check for errors
+        params = false;
         glGetProgramiv(program, GL_LINK_STATUS, &params);
         if (!params) {
             std::cerr << "Error linking shaders: "

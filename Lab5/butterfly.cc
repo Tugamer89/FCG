@@ -1,4 +1,4 @@
-#define GLAD_GL_IMPLEMENTATION  // Necessary for the header-only version.
+#define GLAD_GL_IMPLEMENTATION
 #include <SFML/Window.hpp>
 #include <algorithm>
 #include <cstdlib>
@@ -19,7 +19,8 @@ const char* fragLoc = "resources/shaders/Lab5/fragment.frag";
 // Window and OpenGL setup //
 /////////////////////////////
 
-struct Setup {
+class Setup {
+   public:
     sf::Window* window;
 
     Setup() {
@@ -71,7 +72,8 @@ struct Setup {
 // What to draw //
 //////////////////
 
-struct Scene {
+class Scene {
+   public:
     std::vector<float> points;
     std::vector<unsigned int> indices;
     GLuint vbo;
@@ -89,9 +91,6 @@ struct Scene {
 
     void load() {
         // coordinates in clip space! no transformation involved
-        // we define a very simple shape, resembling a butterfly:
-        // two non-intersecting triangles joined by a single vertex
-        // this shape is not closed, so culling will be disabled
         points = {0.0,  0.5,  0.0,  // red/magenta mix (kind of...), top center
                   0.8,  0.0,  0.4,
 
@@ -123,7 +122,7 @@ struct Scene {
         glBindVertexArray(vao);
 
         // Attribute 0: position (x, y, z)
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
 
         // Attribute 1: color (r, g, b)
@@ -144,26 +143,39 @@ struct Scene {
         glDeleteVertexArrays(1, &vao);
         glDeleteBuffers(1, &vbo);
     }
+};
 
-    void drag(sf::Vector2i mouse_pos) {
-        static sf::Vector2f prev_pos = {0, 0};
-        sf::Vector2f pos(mouse_pos);
+class Camera {
+   public:
+    float phi_deg = 0;
+    float theta_deg = 0;
 
-        if (mouse_start_drag) {
-            prev_pos = pos;
-            return;
-        }
+    GLint phi_deg_location;
+    GLint theta_deg_location;
 
-        sf::Vector2f dpos = pos - prev_pos;
-        prev_pos = pos;
+    Camera(GLuint shader_program) {
+        phi_deg_location = glGetUniformLocation(shader_program, "phi_deg");
+        theta_deg_location = glGetUniformLocation(shader_program, "theta_deg");
 
-        phi_deg += dpos.x * 0.1;
-        theta_deg += dpos.y * 0.1;
-
-        theta_deg = std::clamp(theta_deg, -90.f, 90.f);
+        update();
     }
 
-    void update_uniforms() { return; }
+    void drag(sf::Vector2f dpos) {
+        const float scale = 0.1;
+
+        phi_deg += dpos.x * scale;
+        theta_deg += dpos.y * scale;
+
+        theta_deg = std::clamp(theta_deg, -90.f, 90.f);
+
+        update();
+    }
+
+   private:
+    void update() {
+        glUniform1f(phi_deg_location, phi_deg);
+        glUniform1f(theta_deg_location, theta_deg);
+    }
 };
 
 /////////////
@@ -196,33 +208,17 @@ void handle(const sf::Event::KeyPressed& key, Scene& scene, Shaders& shaders, bo
     }
 }
 
-void handle(const sf::Event::MouseButtonPressed& mouse, Scene& scene) {
-    switch (mouse.button) {
-        case sf::Mouse::Button::Left:
-            scene.mouse_left_pressed = true;
-            scene.mouse_start_drag = true;
-            return;
-        default:
-            return;
-    }
-}
+void handle(const sf::Event::MouseMoved& mouse, Camera& camera) {
+    static sf::Vector2f prev_pos = {0, 0};
 
-void handle(const sf::Event::MouseButtonReleased& mouse, Scene& scene) {
-    switch (mouse.button) {
-        case sf::Mouse::Button::Left:
-            scene.mouse_left_pressed = false;
-            return;
-        default:
-            return;
-    }
-}
+    sf::Vector2f mouse_pos(mouse.position);
+    sf::Vector2f dpos = prev_pos - mouse_pos;
 
-void handle(const sf::Event::MouseMoved& mouse, Scene& scene) {
-    if (scene.mouse_left_pressed) {
-        scene.drag(mouse.position);
-        scene.mouse_start_drag = false;
-        scene.update_uniforms();
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+        camera.drag(dpos);
     }
+
+    prev_pos = mouse_pos;
 }
 
 //////////
@@ -234,14 +230,9 @@ int main() {
     Setup setup;
     sf::Window& window = *setup.window;
 
-    // create a default scene
     Scene scene;
-
-    // create default shaders
-    // Shaders shaders;
-
-    // load shaders from files
     Shaders shaders(vertLoc, fragLoc);
+    Camera camera(shaders.program);
 
     // face culling (temporarily disabled, because the butterfly is not a closed surface)
     // glEnable (GL_CULL_FACE);
@@ -250,8 +241,6 @@ int main() {
     // depth testing
     glEnable(GL_DEPTH_TEST);
 
-    // Put the shader program, and the VAO, in focus in OpenGL's state machine
-    // these can changed dynamically as needed in the loop too.
     glUseProgram(shaders.program);
     glBindVertexArray(scene.vao);
 
@@ -268,18 +257,11 @@ int main() {
                 glViewport(0, 0, resized->size.x, resized->size.y);
             else if (const auto* key_pressed = event->getIf<sf::Event::KeyPressed>())
                 handle(*key_pressed, scene, shaders, running);
-            else if (const auto* mouse = event->getIf<sf::Event::MouseButtonPressed>())
-                handle(*mouse, scene);
-            else if (const auto* mouse = event->getIf<sf::Event::MouseButtonReleased>())
-                handle(*mouse, scene);
             else if (const auto* mouse = event->getIf<sf::Event::MouseMoved>())
-                handle(*mouse, scene);
+                handle(*mouse, camera);
         }
 
-        // draw, using the current VAO and current ShaderProgram
         draw(scene);
-
-        // end the current frame (internally swaps the front and back buffers)
         window.display();
     }
 
