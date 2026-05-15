@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.7.0](https://github.com/Tugamer89/FCG/compare/v2.6.0...v2.7.0) (2026-05-15)
+
+
+### Features
+
+* **Lab5:** add glm dependency and update shader handling for camera transformations ([5d89cb3](https://github.com/Tugamer89/FCG/commit/5d89cb3ba58ff69f2fc121c3064a50f1bb0c7fa0))
+* **Lab5:** added first steps ([cb05023](https://github.com/Tugamer89/FCG/commit/cb05023b77e9ffa6bc6b1ad161fb9b948170fd3a))
+* **Lab5:** ended Lab with optional features ([43b7db9](https://github.com/Tugamer89/FCG/commit/43b7db9ef18377e096dddfb9ff17cbece761872c))
+* **Lab5:** implement camera controls and update shaders for rotation ([611cbba](https://github.com/Tugamer89/FCG/commit/611cbbaef3330d940ab23a98af7bca8fa6c06eac))
+
+
+### Code Refactoring
+
+* **Scene:** remove unused reload function ([0a35830](https://github.com/Tugamer89/FCG/commit/0a358301cfa2f878671acb41d6d78fc3a7cf65e8))
+
 ## [2.6.0](https://github.com/Tugamer89/FCG/compare/v2.5.0...v2.6.0) (2026-05-12)
 
 
