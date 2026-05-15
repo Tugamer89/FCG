@@ -17,28 +17,13 @@ void main() {
     float st = sin(theta);
 
     // Matrice di rotazione asse Y (phi)
-    mat4 Ry = mat4(
-         cp,  0.0, -sp,  0.0,
-        0.0,  1.0,  0.0, 0.0,
-         sp,  0.0,  cp,  0.0,
-        0.0,  0.0,  0.0, 1.0
-    );
+    mat4 Ry = mat4(cp, 0.0, -sp, 0.0, 0.0, 1.0, 0.0, 0.0, sp, 0.0, cp, 0.0, 0.0, 0.0, 0.0, 1.0);
 
     // Matrice di rotazione asse X (theta)
-    mat4 Rx = mat4(
-        1.0,  0.0,  0.0, 0.0,
-        0.0,   ct,   st, 0.0,
-        0.0,  -st,   ct, 0.0,
-        0.0,  0.0,  0.0, 1.0
-    );
+    mat4 Rx = mat4(1.0, 0.0, 0.0, 0.0, 0.0, ct, st, 0.0, 0.0, -st, ct, 0.0, 0.0, 0.0, 0.0, 1.0);
 
     // Matrice di traslazione lungo Z (con centro z = -2.0)
-    mat4 T = mat4(
-        1.0, 0.0,  0.0, 0.0,
-        0.0, 1.0,  0.0, 0.0,
-        0.0, 0.0,  1.0, 0.0,
-        0.0, 0.0, -2.0, 1.0
-    );
+    mat4 T = mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -2.0, 1.0);
 
     // Matrice di Proiezione
     float fd = 2.0;
@@ -48,12 +33,7 @@ void main() {
     float A = -(f_cp + ncp) / (f_cp - ncp);
     float B = -(2.0 * f_cp * ncp) / (f_cp - ncp);
 
-    mat4 P = mat4(
-         fd, 0.0,  0.0,  0.0,
-        0.0,  fd,  0.0,  0.0,
-        0.0, 0.0,    A, -1.0,
-        0.0, 0.0,    B,  0.0
-    );
+    mat4 P = mat4(fd, 0.0, 0.0, 0.0, 0.0, fd, 0.0, 0.0, 0.0, 0.0, A, -1.0, 0.0, 0.0, B, 0.0);
 
     mat4 MVP = P * T * Rx * Ry;
 
