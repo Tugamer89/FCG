@@ -1,16 +1,12 @@
-#define GLAD_GL_IMPLEMENTATION
 #include <SFML/Window.hpp>
 #include <algorithm>
 #include <cstdlib>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/trigonometric.hpp>
 #include <iostream>
 
-#include "glad/gl.h"
-
-////////////////////
-// How it's drawn //
-////////////////////
-
-#include "./include/hotshaders.hh"
+#include "include/hotshaders.hh"
 
 const char* vertLoc = "resources/shaders/Lab5/vertex.vert";
 const char* fragLoc = "resources/shaders/Lab5/fragment.frag";
@@ -68,46 +64,46 @@ class Setup {
     ~Setup() { delete window; }
 };
 
-//////////////////
-// What to draw //
-//////////////////
+//////////////////////////
+// What and how to draw //
+//////////////////////////
 
 class Scene {
-   public:
+   private:
     std::vector<float> points;
     std::vector<unsigned int> indices;
     GLuint vbo;
     GLuint ebo;
     GLuint vao;
 
-    bool mouse_left_pressed = false;
-    bool mouse_start_drag = false;
-
-    float phi_deg = 0;
-    float theta_deg = 0;
-
+   public:
     Scene() { load(); }
     ~Scene() { clean(); }
 
     void load() {
         // coordinates in clip space! no transformation involved
-        points = {0.0,  0.5,  0.0,  // red/magenta mix (kind of...), top center
-                  0.8,  0.0,  0.4,
+        points = {
+            0.0,  0.5,  0.0,  // red/magenta mix (kind of...), top center
+            0.8,  0.0,  0.4,  //
 
-                  0.5,  -0.5, 0.3,  // green, bottom right, back
-                  0.0,  0.8,  0.0,
+            0.5,  -0.5, 0.3,  // green, bottom right, back
+            0.0,  0.8,  0.0,  //
 
-                  -0.5, -0.5, 0.3,  // blue, bottom left, back
-                  0.0,  0.0,  0.8,
+            -0.5, -0.5, 0.3,  // blue, bottom left, back
+            0.0,  0.0,  0.8,  //
 
-                  0.5,  -0.5, -0.3,  // cyan, bottom right, front
-                  0.0,  0.8,  0.8,
+            0.5,  -0.5, -0.3,  // cyan, bottom right, front
+            0.0,  0.8,  0.8,   //
 
-                  -0.5, -0.5, -0.3,  // yellow, bottom left, front
-                  0.8,  0.8,  0.0};
+            -0.5, -0.5, -0.3,  // yellow, bottom left, front
+            0.8,  0.8,  0.0    //
+        };
 
         // 2 faces, 3 indices per face, CCW order
-        indices = {0, 3, 4, 0, 2, 1};
+        indices = {
+            0, 3, 4,  //
+            0, 2, 1   //
+        };
 
         // we want just one buffer, and we retrieve the name OpenGL assigns to it.
         glGenBuffers(1, &vbo);
@@ -143,19 +139,26 @@ class Scene {
         glDeleteVertexArrays(1, &vao);
         glDeleteBuffers(1, &vbo);
     }
+
+    void draw() {
+        // clear the buffers
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // draw all elements as described by indices
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    }
 };
 
 class Camera {
    public:
+    glm::mat4 vp;
     float phi_deg = 0;
     float theta_deg = 0;
 
-    GLint phi_deg_location;
-    GLint theta_deg_location;
+    GLint vp_location;
 
     Camera(GLuint shader_program) {
-        phi_deg_location = glGetUniformLocation(shader_program, "phi_deg");
-        theta_deg_location = glGetUniformLocation(shader_program, "theta_deg");
+        vp_location = glGetUniformLocation(shader_program, "vp");
 
         update();
     }
@@ -173,28 +176,56 @@ class Camera {
 
    private:
     void update() {
-        glUniform1f(phi_deg_location, phi_deg);
-        glUniform1f(theta_deg_location, theta_deg);
+        float phi = glm::radians(phi_deg);
+        float theta = glm::radians(theta_deg);
+
+        float cp = cos(phi);
+        float sp = sin(phi);
+        float ct = cos(theta);
+        float st = sin(theta);
+
+        // Y-axis rotation matrix (phi)
+        glm::mat4 Ry = glm::mat4(cp, 0.0, -sp, 0.0,   //
+                                 0.0, 1.0, 0.0, 0.0,  //
+                                 sp, 0.0, cp, 0.0,    //
+                                 0.0, 0.0, 0.0, 1.0);
+
+        // X-axis rotation matrix (theta)
+        glm::mat4 Rx = glm::mat4(1.0, 0.0, 0.0, 0.0,  //
+                                 0.0, ct, st, 0.0,    //
+                                 0.0, -st, ct, 0.0,   //
+                                 0.0, 0.0, 0.0, 1.0);
+
+        // Translation matrix along Z (center z = -2.0)
+        glm::mat4 T = glm::mat4(1.0, 0.0, 0.0, 0.0,  //
+                                0.0, 1.0, 0.0, 0.0,  //
+                                0.0, 0.0, 1.0, 0.0,  //
+                                0.0, 0.0, -2.0, 1.0);
+
+        // Projection Matrix
+        float fd = 2.0;
+        float f_cp = 3.0;
+        float ncp = 1.0;
+
+        float A = -(f_cp + ncp) / (f_cp - ncp);
+        float B = -(2.0 * f_cp * ncp) / (f_cp - ncp);
+
+        glm::mat4 P = glm::mat4(fd, 0.0, 0.0, 0.0,  //
+                                0.0, fd, 0.0, 0.0,  //
+                                0.0, 0.0, A, -1.0,  //
+                                0.0, 0.0, B, 0.0);
+
+        vp = P * T * Rx * Ry;
+
+        glUniformMatrix4fv(vp_location, 1, GL_FALSE, glm::value_ptr(vp));
     }
 };
-
-/////////////
-// Draw!!! //
-/////////////
-
-void draw(Scene& scene) {
-    // clear the buffers
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // draw all elements as described by indices
-    glDrawElements(GL_TRIANGLES, scene.indices.size(), GL_UNSIGNED_INT, 0);
-}
 
 ////////////////////
 // SFML Callbacks //
 ////////////////////
 
-void handle(const sf::Event::KeyPressed& key, Scene& scene, Shaders& shaders, bool& running) {
+void handle(const sf::Event::KeyPressed& key, Shaders& shaders, bool& running) {
     switch (key.scancode) {
         case sf::Keyboard::Scancode::Space:
             shaders.reload(vertLoc, fragLoc);
@@ -230,8 +261,10 @@ int main() {
     Setup setup;
     sf::Window& window = *setup.window;
 
-    Scene scene;
     Shaders shaders(vertLoc, fragLoc);
+    shaders.use();
+
+    Scene scene;
     Camera camera(shaders.program);
 
     // face culling (temporarily disabled, because the butterfly is not a closed surface)
@@ -240,9 +273,6 @@ int main() {
 
     // depth testing
     glEnable(GL_DEPTH_TEST);
-
-    glUseProgram(shaders.program);
-    glBindVertexArray(scene.vao);
 
     ///////////////
     // Main Loop //
@@ -256,12 +286,12 @@ int main() {
             else if (const auto* resized = event->getIf<sf::Event::Resized>())
                 glViewport(0, 0, resized->size.x, resized->size.y);
             else if (const auto* key_pressed = event->getIf<sf::Event::KeyPressed>())
-                handle(*key_pressed, scene, shaders, running);
+                handle(*key_pressed, shaders, running);
             else if (const auto* mouse = event->getIf<sf::Event::MouseMoved>())
                 handle(*mouse, camera);
         }
 
-        draw(scene);
+        scene.draw();
         window.display();
     }
 

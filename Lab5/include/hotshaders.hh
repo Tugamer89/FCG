@@ -1,9 +1,12 @@
 #ifndef HOT_SHADERS_HH
 #define HOT_SHADERS_HH
+#define GLAD_GL_IMPLEMENTATION
 
 #include <filesystem>
 #include <fstream>
 #include <string>
+
+#include "../glad/gl.h"
 
 // returns a C++ string loaded with the contents of a whole file
 inline std::string read_file(const std::string filename) {
@@ -100,12 +103,12 @@ class Shaders {
     bool compile_attach_link(const char** vertex_source_ptr, const char** fragment_source_ptr) {
         int params = false;
 
-        // copmile vertex shader
+        // compile vertex shader
         GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex, 1, vertex_source_ptr, NULL);
         glCompileShader(vertex);
         // check for errors
-        params = false;
+        params = -1;
         glGetShaderiv(vertex, GL_COMPILE_STATUS, &params);
         if (!params) {
             std::cerr << "Error compiling vertex shader: "
@@ -118,7 +121,6 @@ class Shaders {
         glShaderSource(fragment, 1, fragment_source_ptr, NULL);
         glCompileShader(fragment);
         // check for errors
-        params = false;
         glGetShaderiv(fragment, GL_COMPILE_STATUS, &params);
         if (!params) {
             std::cerr << "Error compiling fragment shader: "
@@ -132,7 +134,6 @@ class Shaders {
         glAttachShader(program, vertex);
         glLinkProgram(program);
         // check for errors
-        params = false;
         glGetProgramiv(program, GL_LINK_STATUS, &params);
         if (!params) {
             std::cerr << "Error linking shaders: "
@@ -146,6 +147,10 @@ class Shaders {
 
         return true;
     }
+
+    void use() { glUseProgram(program); }
+
+    void stop() { glUseProgram(0); }
 };
 
 #endif

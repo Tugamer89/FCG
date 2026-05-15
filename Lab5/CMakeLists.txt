@@ -3,7 +3,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 find_package(OpenGL REQUIRED)
 
 add_executable(butterfly butterfly.cc)
-target_link_libraries(butterfly PRIVATE SFML::Window OpenGL::GL)
+target_link_libraries(butterfly PRIVATE SFML::Window OpenGL::GL glm::glm)
 
 install(TARGETS butterfly DESTINATION bin)
 
