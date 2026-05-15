@@ -75,9 +75,13 @@ class Scene {
     GLuint vbo;
     GLuint ebo;
     GLuint vao;
+    GLint edge_loc;
 
    public:
-    Scene() { load(); }
+    Scene(GLuint shader_program) {
+        edge_loc = glGetUniformLocation(shader_program, "draw_edge");
+        load();
+    }
     ~Scene() { clean(); }
 
     void load() {
@@ -102,7 +106,12 @@ class Scene {
         // 2 faces, 3 indices per face, CCW order
         indices = {
             0, 3, 4,  //
-            0, 2, 1   //
+            0, 2, 1,  //
+            0, 4, 2,  //
+            0, 1, 3,  //
+
+            1, 2, 3,  //
+            4, 3, 2,  //
         };
 
         // we want just one buffer, and we retrieve the name OpenGL assigns to it.
@@ -142,39 +151,43 @@ class Scene {
 
     void draw() {
         // clear the buffers
+        glClearColor(0.15f, 0.15f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // draw all elements as described by indices
+        // draw the filled triangles
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glUniform1i(edge_loc, 0);
+
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(1.0f, 1.0f);
+
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+
+        glDisable(GL_POLYGON_OFFSET_FILL);
+
+        // draw the edges
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glUniform1i(edge_loc, 1);
+
+        glLineWidth(2.0f);
+
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     }
 };
 
 class Camera {
-   public:
+   private:
+    static constexpr float DEFAULT_ZOOM = 2.f;
+
     glm::mat4 vp;
     float phi_deg = 0;
     float theta_deg = 0;
+    float zoom_value = DEFAULT_ZOOM;
+    float dolly_value = -DEFAULT_ZOOM;
+    sf::Vector2f pan_value = {0, 0};
 
     GLint vp_location;
 
-    Camera(GLuint shader_program) {
-        vp_location = glGetUniformLocation(shader_program, "vp");
-
-        update();
-    }
-
-    void drag(sf::Vector2f dpos) {
-        const float scale = 0.1;
-
-        phi_deg += dpos.x * scale;
-        theta_deg += dpos.y * scale;
-
-        theta_deg = std::clamp(theta_deg, -90.f, 90.f);
-
-        update();
-    }
-
-   private:
     void update() {
         float phi = glm::radians(phi_deg);
         float theta = glm::radians(theta_deg);
@@ -185,30 +198,36 @@ class Camera {
         float st = sin(theta);
 
         // Y-axis rotation matrix (phi)
-        glm::mat4 Ry = glm::mat4(cp, 0.0, -sp, 0.0,   //
-                                 0.0, 1.0, 0.0, 0.0,  //
-                                 sp, 0.0, cp, 0.0,    //
-                                 0.0, 0.0, 0.0, 1.0);
+        glm::mat4 Ry = glm::mat4(  //
+            cp, 0.0, -sp, 0.0,     //
+            0.0, 1.0, 0.0, 0.0,    //
+            sp, 0.0, cp, 0.0,      //
+            0.0, 0.0, 0.0, 1.0     //
+        );
 
         // X-axis rotation matrix (theta)
-        glm::mat4 Rx = glm::mat4(1.0, 0.0, 0.0, 0.0,  //
-                                 0.0, ct, st, 0.0,    //
-                                 0.0, -st, ct, 0.0,   //
-                                 0.0, 0.0, 0.0, 1.0);
+        glm::mat4 Rx = glm::mat4(  //
+            1.0, 0.0, 0.0, 0.0,    //
+            0.0, ct, st, 0.0,      //
+            0.0, -st, ct, 0.0,     //
+            0.0, 0.0, 0.0, 1.0     //
+        );
 
         // Translation matrix along Z (center z = -2.0)
-        glm::mat4 T = glm::mat4(1.0, 0.0, 0.0, 0.0,  //
-                                0.0, 1.0, 0.0, 0.0,  //
-                                0.0, 0.0, 1.0, 0.0,  //
-                                0.0, 0.0, -2.0, 1.0);
+        glm::mat4 T = glm::mat4(                        //
+            1.0, 0.0, 0.0, 0.0,                         //
+            0.0, 1.0, 0.0, 0.0,                         //
+            0.0, 0.0, 1.0, 0.0,                         //
+            pan_value.x, pan_value.y, dolly_value, 1.0  //
+        );
 
         // Projection Matrix
-        float fd = 2.0;
+        float fd = zoom_value;
         float f_cp = 3.0;
-        float ncp = 1.0;
+        float n_cp = 1.0;
 
-        float A = -(f_cp + ncp) / (f_cp - ncp);
-        float B = -(2.0 * f_cp * ncp) / (f_cp - ncp);
+        float A = -(f_cp + n_cp) / (f_cp - n_cp);
+        float B = -(2.0 * f_cp * n_cp) / (f_cp - n_cp);
 
         glm::mat4 P = glm::mat4(fd, 0.0, 0.0, 0.0,  //
                                 0.0, fd, 0.0, 0.0,  //
@@ -219,13 +238,58 @@ class Camera {
 
         glUniformMatrix4fv(vp_location, 1, GL_FALSE, glm::value_ptr(vp));
     }
+
+   public:
+    Camera(GLuint shader_program) {
+        vp_location = glGetUniformLocation(shader_program, "vp");
+
+        update();
+    }
+
+    void drag(sf::Vector2f dpos) {
+        const float scale = 0.1f;
+
+        phi_deg += dpos.x * scale;
+        theta_deg += dpos.y * scale;
+
+        theta_deg = std::clamp(theta_deg, -90.f, 90.f);
+
+        update();
+    }
+
+    void zoom(float offset) {
+        zoom_value += offset * 0.01f;
+        zoom_value = std::clamp(zoom_value, 0.5f, 20.f);
+
+        update();
+    }
+
+    void dolly(float offset) {
+        dolly_value += offset * 0.01f;
+        update();
+    }
+
+    void pan(sf::Vector2f dpos) {
+        dpos.y = -dpos.y;
+        pan_value += dpos * 0.005f;
+        update();
+    }
+
+    void reset() {
+        phi_deg = 0;
+        theta_deg = 0;
+        zoom_value = DEFAULT_ZOOM;
+        dolly_value = -DEFAULT_ZOOM;
+        pan_value = {0, 0};
+        update();
+    }
 };
 
 ////////////////////
 // SFML Callbacks //
 ////////////////////
 
-void handle(const sf::Event::KeyPressed& key, Shaders& shaders, bool& running) {
+void handle(const sf::Event::KeyPressed& key, Shaders& shaders, Camera& camera, bool& running) {
     switch (key.scancode) {
         case sf::Keyboard::Scancode::Space:
             shaders.reload(vertLoc, fragLoc);
@@ -234,19 +298,35 @@ void handle(const sf::Event::KeyPressed& key, Shaders& shaders, bool& running) {
         case sf::Keyboard::Scancode::Escape:
             running = false;
             return;
+        case sf::Keyboard::Scancode::R:
+            camera.reset();
+            return;
         default:
             return;
     }
 }
 
-void handle(const sf::Event::MouseMoved& mouse, Camera& camera) {
-    static sf::Vector2f prev_pos = {0, 0};
-
+void handle(const sf::Event::MouseMoved& mouse, Camera& camera, bool& just_entered) {
     sf::Vector2f mouse_pos(mouse.position);
+    static sf::Vector2f prev_pos = mouse_pos;
+
+    if (just_entered) {
+        prev_pos = mouse_pos;
+        just_entered = false;
+    }
+
     sf::Vector2f dpos = prev_pos - mouse_pos;
 
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift) ||
+        sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift)) {
+        camera.zoom(dpos.y);
+    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LControl) ||
+               sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RControl)) {
+        camera.dolly(dpos.y);
+    } else if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
         camera.drag(dpos);
+    } else if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
+        camera.pan(dpos);
     }
 
     prev_pos = mouse_pos;
@@ -264,12 +344,12 @@ int main() {
     Shaders shaders(vertLoc, fragLoc);
     shaders.use();
 
-    Scene scene;
+    Scene scene(shaders.program);
     Camera camera(shaders.program);
 
-    // face culling (temporarily disabled, because the butterfly is not a closed surface)
-    // glEnable (GL_CULL_FACE);
-    // glCullFace (GL_BACK);
+    // face culling
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
     // depth testing
     glEnable(GL_DEPTH_TEST);
@@ -278,17 +358,21 @@ int main() {
     // Main Loop //
     ///////////////
 
+    bool just_entered = true;
     bool running = true;
+
     while (running) {
         while (const std::optional event = window.pollEvent()) {
             if (event->is<sf::Event::Closed>())
                 running = false;
+            else if (event->is<sf::Event::MouseEntered>())
+                just_entered = true;
             else if (const auto* resized = event->getIf<sf::Event::Resized>())
                 glViewport(0, 0, resized->size.x, resized->size.y);
             else if (const auto* key_pressed = event->getIf<sf::Event::KeyPressed>())
-                handle(*key_pressed, shaders, running);
+                handle(*key_pressed, shaders, camera, running);
             else if (const auto* mouse = event->getIf<sf::Event::MouseMoved>())
-                handle(*mouse, camera);
+                handle(*mouse, camera, just_entered);
         }
 
         scene.draw();

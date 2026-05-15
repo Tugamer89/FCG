@@ -1,9 +1,12 @@
-#version 430 core
+#version 410 core
+
+const vec4 BLACK = vec4(0, 0, 0, 1);
 
 in vec3 interpolated_color;
+uniform bool draw_edge;
 
-layout(location = 0) out vec4 fragment_color;
+out vec4 fragment_color;
 
 void main() {
-    fragment_color = vec4(interpolated_color, 1.0);
+    fragment_color = draw_edge ? BLACK : vec4(interpolated_color, 1);
 }
