@@ -10,6 +10,8 @@ install(TARGETS butterfly DESTINATION bin)
 set(LAB5_SHADERS
     "${CMAKE_SOURCE_DIR}/resources/shaders/Lab5/vertex.vert"
     "${CMAKE_SOURCE_DIR}/resources/shaders/Lab5/fragment.frag"
+    "${CMAKE_SOURCE_DIR}/resources/meshes/bunny.off"
+    "${CMAKE_SOURCE_DIR}/resources/meshes/pyramid.off"
 )
 
 target_copy_shaders(butterfly Lab5 ${LAB5_SHADERS})

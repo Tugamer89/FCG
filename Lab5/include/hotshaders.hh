@@ -1,12 +1,15 @@
 #ifndef HOT_SHADERS_HH
 #define HOT_SHADERS_HH
-#define GLAD_GL_IMPLEMENTATION
 
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <string>
 
+#ifndef GLAD_GL_IMPLEMENTATION
+#define GLAD_GL_IMPLEMENTATION
 #include "../glad/gl.h"
+#endif
 
 // returns a C++ string loaded with the contents of a whole file
 inline std::string read_file(const std::string filename) {
