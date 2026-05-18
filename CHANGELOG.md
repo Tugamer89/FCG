@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.8.0](https://github.com/Tugamer89/FCG/compare/v2.7.0...v2.8.0) (2026-05-18)
+
+
+### Features
+
+* **Lab5:** animation ([a27dc4c](https://github.com/Tugamer89/FCG/commit/a27dc4c48c7f9bf4d8a061bf23cfa0302f92677d))
+
+
+### Bug Fixes
+
+* streamline key handling for camera reset in event processing ([0527e8c](https://github.com/Tugamer89/FCG/commit/0527e8cfc95b3c1ac820a870099d4ef72944fcca))
+
 ## [2.7.0](https://github.com/Tugamer89/FCG/compare/v2.6.0...v2.7.0) (2026-05-15)
 
 
