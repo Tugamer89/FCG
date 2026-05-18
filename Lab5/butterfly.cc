@@ -70,6 +70,7 @@ class Setup {
 
 class Scene {
    private:
+    float dColor = 0.f;
     std::vector<float> points;
     std::vector<unsigned int> indices;
     GLuint vbo;
@@ -184,7 +185,7 @@ class Camera {
     float theta_deg = 0;
     float zoom_value = DEFAULT_ZOOM;
     float dolly_value = -DEFAULT_ZOOM;
-    sf::Vector2f pan_value = {0, 0};
+    sf::Vector2f move_value = {0, 0};
 
     GLint vp_location;
 
@@ -218,7 +219,7 @@ class Camera {
             1.0, 0.0, 0.0, 0.0,                         //
             0.0, 1.0, 0.0, 0.0,                         //
             0.0, 0.0, 1.0, 0.0,                         //
-            pan_value.x, pan_value.y, dolly_value, 1.0  //
+            move_value.x, move_value.y, dolly_value, 1.0  //
         );
 
         // Projection Matrix
@@ -269,9 +270,9 @@ class Camera {
         update();
     }
 
-    void pan(sf::Vector2f dpos) {
+    void move(sf::Vector2f dpos) {
         dpos.y = -dpos.y;
-        pan_value += dpos * 0.005f;
+        move_value += dpos * 0.005f;
         update();
     }
 
@@ -280,7 +281,22 @@ class Camera {
         theta_deg = 0;
         zoom_value = DEFAULT_ZOOM;
         dolly_value = -DEFAULT_ZOOM;
-        pan_value = {0, 0};
+        move_value = {0, 0};
+        update();
+    }
+
+    void updateAnimation(sf::Time dt) {
+        const float rotation_speed = 20.f;
+        static int theta_dir = 1;
+
+        if (theta_deg > 90.f)
+            theta_dir = -1;
+        else if (theta_deg < -90.f)
+            theta_dir = 1;
+
+        phi_deg += rotation_speed * dt.asSeconds();
+        theta_deg += theta_dir * rotation_speed * dt.asSeconds() * 0.5f;
+
         update();
     }
 };
@@ -289,7 +305,7 @@ class Camera {
 // SFML Callbacks //
 ////////////////////
 
-void handle(const sf::Event::KeyPressed& key, Shaders& shaders, Camera& camera, bool& running) {
+void handle(const sf::Event::KeyPressed& key, Shaders& shaders, Camera& camera, bool& running, bool& animate) {
     switch (key.scancode) {
         case sf::Keyboard::Scancode::Space:
             shaders.reload(vertLoc, fragLoc);
@@ -300,6 +316,9 @@ void handle(const sf::Event::KeyPressed& key, Shaders& shaders, Camera& camera, 
             return;
         case sf::Keyboard::Scancode::R:
             camera.reset();
+            return;
+        case sf::Keyboard::Scancode::Enter:
+            animate = !animate;
             return;
         default:
             return;
@@ -313,6 +332,7 @@ void handle(const sf::Event::MouseMoved& mouse, Camera& camera, bool& just_enter
     if (just_entered) {
         prev_pos = mouse_pos;
         just_entered = false;
+        return;
     }
 
     sf::Vector2f dpos = prev_pos - mouse_pos;
@@ -326,7 +346,7 @@ void handle(const sf::Event::MouseMoved& mouse, Camera& camera, bool& just_enter
     } else if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
         camera.drag(dpos);
     } else if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
-        camera.pan(dpos);
+        camera.move(dpos);
     }
 
     prev_pos = mouse_pos;
@@ -358,8 +378,10 @@ int main() {
     // Main Loop //
     ///////////////
 
+    bool animate = false;
     bool just_entered = true;
     bool running = true;
+    sf::Clock clock;
 
     while (running) {
         while (const std::optional event = window.pollEvent()) {
@@ -370,9 +392,15 @@ int main() {
             else if (const auto* resized = event->getIf<sf::Event::Resized>())
                 glViewport(0, 0, resized->size.x, resized->size.y);
             else if (const auto* key_pressed = event->getIf<sf::Event::KeyPressed>())
-                handle(*key_pressed, shaders, camera, running);
+                handle(*key_pressed, shaders, camera, running, animate);
             else if (const auto* mouse = event->getIf<sf::Event::MouseMoved>())
                 handle(*mouse, camera, just_entered);
+        }
+
+        sf::Time dt = clock.restart();
+
+        if (animate) {
+            camera.updateAnimation(dt);
         }
 
         scene.draw();
