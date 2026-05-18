@@ -215,10 +215,10 @@ class Camera {
         );
 
         // Translation matrix along Z (center z = -2.0)
-        glm::mat4 T = glm::mat4(                        //
-            1.0, 0.0, 0.0, 0.0,                         //
-            0.0, 1.0, 0.0, 0.0,                         //
-            0.0, 0.0, 1.0, 0.0,                         //
+        glm::mat4 T = glm::mat4(                          //
+            1.0, 0.0, 0.0, 0.0,                           //
+            0.0, 1.0, 0.0, 0.0,                           //
+            0.0, 0.0, 1.0, 0.0,                           //
             move_value.x, move_value.y, dolly_value, 1.0  //
         );
 
@@ -305,7 +305,8 @@ class Camera {
 // SFML Callbacks //
 ////////////////////
 
-void handle(const sf::Event::KeyPressed& key, Shaders& shaders, Camera& camera, bool& running, bool& animate) {
+void handle(const sf::Event::KeyPressed& key, Shaders& shaders, Camera& camera, bool& running,
+            bool& animate) {
     switch (key.scancode) {
         case sf::Keyboard::Scancode::Space:
             shaders.reload(vertLoc, fragLoc);
