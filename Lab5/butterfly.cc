@@ -311,12 +311,11 @@ void handle(const sf::Event::KeyPressed& key, Shaders& shaders, Camera& camera, 
         case sf::Keyboard::Scancode::Space:
             shaders.reload(vertLoc, fragLoc);
             glUseProgram(shaders.program);
+        case sf::Keyboard::Scancode::R:
+            camera.reset();
             return;
         case sf::Keyboard::Scancode::Escape:
             running = false;
-            return;
-        case sf::Keyboard::Scancode::R:
-            camera.reset();
             return;
         case sf::Keyboard::Scancode::Enter:
             animate = !animate;
