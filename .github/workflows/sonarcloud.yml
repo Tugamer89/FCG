@@ -29,6 +29,13 @@ jobs:
         run: |
           cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
+      - name: Downgrade C++ Standard for SonarCloud
+        run: |
+          sed -i 's/-std=c++26/-std=c++23/g' build/compile_commands.json
+          sed -i 's/-std=gnu++26/-std=gnu++23/g' build/compile_commands.json
+          sed -i 's/-std=c++2c/-std=c++2b/g' build/compile_commands.json
+          sed -i 's/-std=gnu++2c/-std=gnu++2b/g' build/compile_commands.json
+
       - name: SonarQube/SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v8
         env:
