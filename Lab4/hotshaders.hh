@@ -10,7 +10,7 @@
 #include "glad/gl.h"
 
 // returns a C++ string loaded with the contents of a whole file
-inline std::string read_file(const std::string filename) {
+inline std::string read_file(const std::string& filename) {
     // open file
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
@@ -56,7 +56,7 @@ struct Shaders {
 
     Shaders() { load(); }
 
-    Shaders(const std::string vertex_file, const std::string fragment_file) {
+    Shaders(const std::string& vertex_file, const std::string& fragment_file) {
         load(vertex_file, fragment_file);
     }
 
@@ -79,7 +79,7 @@ struct Shaders {
         if (!compile_attach_link(&vertex_source, &fragment_source)) exit(1);
     }
 
-    void load(const std::string vertex_file, const std::string fragment_file) {
+    void load(const std::string& vertex_file, const std::string& fragment_file) {
         const std::string vertex_string = read_file(vertex_file);
         const std::string fragment_string = read_file(fragment_file);
         const char* vertex_source = vertex_string.c_str();
@@ -95,7 +95,7 @@ struct Shaders {
 
     void clean() { glDeleteProgram(program); }
 
-    void reload(const std::string vertex_file, const std::string fragment_file) {
+    void reload(const std::string& vertex_file, const std::string& fragment_file) {
         clean();
         load(vertex_file, fragment_file);
     }

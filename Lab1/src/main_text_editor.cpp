@@ -214,9 +214,8 @@ void doGraphics(State& gs) {
     ++gs.frameCounter;
 
     if (gs.fpsClock.getElapsedTime().asSeconds() >= .05f) {
-        gs.fpsText.setString(
-            "FPS: " + std::to_string(static_cast<int>(static_cast<float>(gs.frameCounter) /
-                                                      gs.fpsClock.getElapsedTime().asSeconds())));
+        gs.fpsText.setString(std::format("FPS: {}", static_cast<int>(static_cast<float>(gs.frameCounter) /
+                                                                      gs.fpsClock.getElapsedTime().asSeconds())));
         gs.frameCounter = 0;
         gs.fpsClock.restart();
     }

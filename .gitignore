@@ -20,6 +20,7 @@ _deps/
 # =========================
 # File di configurazione degli IDE/Editor
 # =========================
+.sonarlint/
 .vscode/
 .idea/
 .vs/

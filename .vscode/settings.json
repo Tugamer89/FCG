@@ -1,11 +1,10 @@
 {
-    "cmake.sourceDirectory": "/home/tuga/repos/FCG",
-    "sonarlint.pathToCompileCommands": "${workspaceFolder}/build/compile_commands.json",
-    
+    "cmake.sourceDirectory": "/home/tuga/repos/FCG",    
     "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "sonarlint.connectedMode.project": {
         "connectionId": "tugamer89",
         "projectKey": "Tugamer89_FCG"
     },
+    "sonarlint.pathToCompileCommands": "${workspaceFolder}/build/compile_commands.json",
 }

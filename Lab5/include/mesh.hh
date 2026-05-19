@@ -5,6 +5,7 @@
 #include <glm/vec3.hpp>
 #include <sstream>
 #include <string>
+#include <iostream>
 #include <vector>
 
 struct Mesh {
@@ -19,7 +20,7 @@ struct Mesh {
         std::ifstream file(filename);
 
         if (!file.is_open()) {
-            fprintf(stderr, "Error: Failed to open file: %s\n", filename.c_str());
+            std::cerr << "Error: Failed to open file: " << filename << std::endl;
             exit(1);
         }
 
@@ -28,7 +29,7 @@ struct Mesh {
         // Read OFF header
         std::getline(file, line);
         if (line != "OFF") {
-            fprintf(stderr, "Error: Invalid OFF file: missing OFF header\n");
+            std::cerr << "Error: Invalid OFF file: missing OFF header" << std::endl;
             exit(1);
         }
 
@@ -44,12 +45,12 @@ struct Mesh {
         std::istringstream headerStream(line);
         unsigned int vnum, fnum, ednum;  // NOSONAR
         if (!(headerStream >> vnum >> fnum >> ednum)) {
-            fprintf(stderr, "Error: Invalid OFF header format\n");
+            std::cerr << "Error: Invalid OFF header format" << std::endl;
             exit(1);
         }
 
         if (ednum != 0) {
-            fprintf(stderr, "Error: Edges not supported\n");
+            std::cerr << "Error: Edges not supported" << std::endl;
             exit(1);
         }
 
@@ -60,7 +61,7 @@ struct Mesh {
         for (unsigned int i = 0; i < vnum; ++i) {
             float x, y, z;  // NOSONAR
             if (!(file >> x >> y >> z)) {
-                fprintf(stderr, "Error: Failed to read vertex data at index %u\n", i);
+                std::cerr << "Error: Failed to read vertex data at index " << i << std::endl;
                 exit(1);
             }
             vertices.emplace_back(x, y, z);
@@ -72,7 +73,7 @@ struct Mesh {
             unsigned int vcount;
 
             if (!(file >> vcount)) {
-                fprintf(stderr, "Error: Failed to read face count at face %u\n", i);
+                std::cerr << "Error: Failed to read face count at face " << i << std::endl;
                 exit(1);
             }
 
@@ -80,12 +81,12 @@ struct Mesh {
                 glm::uvec3 triangle;
 
                 if (!(file >> triangle[0] >> triangle[1] >> triangle[2])) {
-                    fprintf(stderr, "Error: Failed to read triangle indices at face %u\n", i);
+                    std::cerr << "Error: Failed to read triangle indices at face " << i << std::endl;
                     exit(1);
                 }
                 indices.push_back(triangle);
             } else {
-                fprintf(stderr, "Error: Face %u is not a triangle\n", i);
+                std::cerr << "Error: Face " << i << " is not a triangle" << std::endl;
                 exit(1);
             }
         }

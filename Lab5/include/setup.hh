@@ -11,7 +11,7 @@
 
 class Setup {
    public:
-    sf::Window* window;
+    sf::Window window;
 
     Setup() {
         sf::ContextSettings settings;
@@ -29,16 +29,16 @@ class Setup {
         sf::Vector2i centerPosition((desktop.size.x - window_width) / 2,
                                     (desktop.size.y - window_height) / 2);
 
-        window = new sf::Window(sf::VideoMode({window_width, window_height}), "SFML + OpenGL",
-                                sf::Style::Default, sf::State::Windowed, settings);
-        window->setPosition(centerPosition);
-        window->setVerticalSyncEnabled(true);
+        window.create(sf::VideoMode({window_width, window_height}), "SFML + OpenGL",
+                      sf::Style::Default, sf::State::Windowed, settings);
+        window.setPosition(centerPosition);
+        window.setVerticalSyncEnabled(true);
 
-        if (!window->setActive(true)) {
+        if (!window.setActive(true)) {
             std::cerr << "Failure: error during SFML OpenGL Activation." << std::endl;
             exit(1);
         }
-        sf::ContextSettings gotten = window->getSettings();
+        sf::ContextSettings gotten = window.getSettings();
 
         std::cout << "depth bits: " << gotten.depthBits << std::endl;
         std::cout << "stencil bits: " << gotten.stencilBits << std::endl;
@@ -54,8 +54,6 @@ class Setup {
         std::cout << "GLAD GL version: " << GLAD_VERSION_MAJOR(version) << "."
                   << GLAD_VERSION_MINOR(version) << std::endl;
     }
-
-    ~Setup() { delete window; }
 };
 
 #endif

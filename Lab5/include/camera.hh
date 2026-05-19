@@ -35,7 +35,7 @@ class Camera {
         float st = sin(theta);
 
         // Y-axis rotation matrix (phi)
-        glm::mat4 Ry = glm::mat4(  //
+        glm::mat4 Ry(  //
             cp, 0.0, -sp, 0.0,     //
             0.0, 1.0, 0.0, 0.0,    //
             sp, 0.0, cp, 0.0,      //
@@ -43,17 +43,17 @@ class Camera {
         );
 
         // X-axis rotation matrix (theta)
-        glm::mat4 Rx = glm::mat4(  //
+        glm::mat4 Rx(  //
             1.0, 0.0, 0.0, 0.0,    //
             0.0, ct, st, 0.0,      //
             0.0, -st, ct, 0.0,     //
             0.0, 0.0, 0.0, 1.0     //
         );
 
-        // TODO: base translation to the center of the model (e.g., by using the bounding box)
+        // TODO: base translation to the center of the model (e.g., by using the bounding box) when loading new mesh
 
         // Translation matrix along Z (center z = -2.0)
-        glm::mat4 T = glm::mat4(                          //
+        glm::mat4 T(                          //
             1.0, 0.0, 0.0, 0.0,                           //
             0.0, 1.0, 0.0, 0.0,                           //
             0.0, 0.0, 1.0, 0.0,                           //
@@ -68,7 +68,7 @@ class Camera {
         float A = -(f_cp + n_cp) / (f_cp - n_cp);
         float B = -(2.0f * f_cp * n_cp) / (f_cp - n_cp);
 
-        glm::mat4 P = glm::mat4(fd, 0.0, 0.0, 0.0,  //
+        glm::mat4 P(fd, 0.0, 0.0, 0.0,  //
                                 0.0, fd, 0.0, 0.0,  //
                                 0.0, 0.0, A, -1.0,  //
                                 0.0, 0.0, B, 0.0);
@@ -79,9 +79,7 @@ class Camera {
     }
 
    public:
-    explicit Camera(GLuint shader_program) {
-        vp_location = glGetUniformLocation(shader_program, "vp");
-
+    explicit Camera(GLuint shader_program) : vp_location(glGetUniformLocation(shader_program, "vp")) {
         update();
     }
 

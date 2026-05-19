@@ -8,7 +8,7 @@ const char* vertLoc = "resources/shaders/Lab4/vertex.vert";
 const char* fragLoc = "resources/shaders/Lab4/fragment.frag";
 
 struct Setup {
-    sf::Window* window;
+    sf::Window window;
 
     Setup() {
         sf::ContextSettings settings;
@@ -26,16 +26,16 @@ struct Setup {
         sf::Vector2i centerPosition((desktop.size.x - window_width) / 2,
                                     (desktop.size.y - window_height) / 2);
 
-        window = new sf::Window(sf::VideoMode({window_width, window_height}), "SFML + OpenGL",
+        window.create(sf::VideoMode({window_width, window_height}), "SFML + OpenGL",
                                 sf::Style::Default, sf::State::Windowed, settings);
-        window->setPosition(centerPosition);
-        window->setVerticalSyncEnabled(true);
+        window.setPosition(centerPosition);
+        window.setVerticalSyncEnabled(true);
 
-        if (!window->setActive(true)) {
+        if (!window.setActive(true)) {
             std::cerr << "Failure: error during SFML OpenGL Activation." << std::endl;
             exit(1);
         }
-        sf::ContextSettings gotten = window->getSettings();
+        sf::ContextSettings gotten = window.getSettings();
 
         std::cout << "depth bits: " << gotten.depthBits << std::endl;
         std::cout << "stencil bits: " << gotten.stencilBits << std::endl;
@@ -51,8 +51,6 @@ struct Setup {
         std::cout << "GLAD GL version: " << GLAD_VERSION_MAJOR(version) << "."
                   << GLAD_VERSION_MINOR(version) << std::endl;
     }
-
-    ~Setup() { delete window; }
 };
 
 struct Scene {
@@ -63,8 +61,8 @@ struct Scene {
     GLuint vao;
 
     GLint mod_color_location;
-    static constexpr float darken[3] = {0.2, 0.2, 0.2};
-    static constexpr float lighten[3] = {-0.2, -0.2, -0.2};
+    const std::vector<float> darken{0.2, 0.2, 0.2};
+    const std::vector<float> lighten{-0.2, -0.2, -0.2};
 
     Scene() { load(); }
     ~Scene() { clean(); }
@@ -111,7 +109,7 @@ struct Scene {
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
         glEnableVertexAttribArray(0);
 
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
@@ -134,25 +132,25 @@ struct Scene {
 // Draw!!! //
 /////////////
 
-float accumulator = 0.0;
-
 void draw(Scene& scene, Shaders& shaders, float elapsed) {
+    static float accumulator = 0.0;
+
     // clear the buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     accumulator += elapsed;
 
     if (accumulator < 1.f) {
-        glUniform3fv(scene.mod_color_location, 1, scene.lighten);
+        glUniform3fv(scene.mod_color_location, 1, scene.lighten.data());
     } else if (accumulator < 2.f || (accumulator >= 3.f && accumulator < 4.f)) {
         glUniform3f(scene.mod_color_location, 0.f, 0.f, 0.f);
     } else if (accumulator < 3.f) {
-        glUniform3fv(scene.mod_color_location, 1, scene.darken);
+        glUniform3fv(scene.mod_color_location, 1, scene.darken.data());
     } else {
         accumulator = 0.f;
     }
 
-    glDrawElements(GL_TRIANGLES, scene.indices.size(), GL_UNSIGNED_INT, (void*)0);
+    glDrawElements(GL_TRIANGLES, scene.indices.size(), GL_UNSIGNED_INT, nullptr);
 }
 
 ////////////////////
@@ -176,7 +174,7 @@ void handle(const sf::Event::KeyPressed& key, Scene& scene, Shaders& shaders, bo
 int main() {
     // setup SFML + OpenGL, using GLAD
     Setup setup;
-    sf::Window& window = *setup.window;
+    sf::Window& window = setup.window;
 
     Scene scene;
     Shaders shaders(vertLoc, fragLoc);

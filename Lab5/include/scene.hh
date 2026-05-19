@@ -19,8 +19,7 @@ class Scene {
     GLint edge_loc;
 
    public:
-    explicit Scene(GLuint shader_program, const std::string& mesh_file = "") {
-        edge_loc = glGetUniformLocation(shader_program, "draw_edge");
+    explicit Scene(GLuint shader_program, const std::string& mesh_file = "") : edge_loc(glGetUniformLocation(shader_program, "draw_edge")) {
         if (mesh_file.empty()) {
             load();
         } else {

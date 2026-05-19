@@ -70,7 +70,7 @@ void handle(const sf::Event::MouseMoved& mouse, Camera& camera, bool& just_enter
 int main() {
     // setup SFML + OpenGL, using GLAD
     Setup setup;
-    sf::Window& window = *setup.window;
+    sf::Window& window = setup.window;
 
     Shaders shaders(vertLoc, fragLoc);
     shaders.use();
