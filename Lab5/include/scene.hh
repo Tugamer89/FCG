@@ -132,7 +132,8 @@ class Scene {
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(1.0f, 1.0f);
 
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size() * 3), GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size() * 3), GL_UNSIGNED_INT,
+                       nullptr);
 
         glDisable(GL_POLYGON_OFFSET_FILL);
 
@@ -142,7 +143,8 @@ class Scene {
 
         glLineWidth(2.0f);
 
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size() * 3), GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size() * 3), GL_UNSIGNED_INT,
+                       nullptr);
     }
 };
 

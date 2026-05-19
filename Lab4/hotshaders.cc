@@ -150,7 +150,8 @@ void draw(const Scene& scene, float elapsed) {
         accumulator = 0.f;
     }
 
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(scene.indices.size()), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(scene.indices.size()), GL_UNSIGNED_INT,
+                   nullptr);
 }
 
 ////////////////////

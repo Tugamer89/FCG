@@ -53,7 +53,7 @@ class Camera {
         /*
          * TODO: base translation to the center of the model (e.g., by using the bounding box) when
          * loading new mesh, and reload correct mesh with space key. Button to toggle edge drawing.
-        */
+         */
 
         // Translation matrix along Z (center z = -2.0)
         glm::mat4 T(                                      //
