@@ -29,10 +29,10 @@ class Camera {
         float phi = glm::radians(phi_deg);
         float theta = glm::radians(theta_deg);
 
-        float cp = static_cast<float>(cos(phi));
-        float sp = static_cast<float>(sin(phi));
-        float ct = static_cast<float>(cos(theta));
-        float st = static_cast<float>(sin(theta));
+        auto cp = static_cast<float>(cos(phi));
+        auto sp = static_cast<float>(sin(phi));
+        auto ct = static_cast<float>(cos(theta));
+        auto st = static_cast<float>(sin(theta));
 
         // Y-axis rotation matrix (phi)
         glm::mat4 Ry(            //
