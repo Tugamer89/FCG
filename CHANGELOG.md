@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.9.0](https://github.com/Tugamer89/FCG/compare/v2.8.0...v2.9.0) (2026-05-19)
+
+
+### Features
+
+* add pyramid mesh and SonarQube configuration ([9daa23e](https://github.com/Tugamer89/FCG/commit/9daa23edf6d0f3a9183a08d50d5d74d3e61b7633))
+* add SonarCloud configuration and improve project structure ([ac83238](https://github.com/Tugamer89/FCG/commit/ac8323833a1a3d67b7a01ecbc8718e99918c0ef9))
+
+
+### Bug Fixes
+
+* add missing dependencies for C++ compiler setup ([8270d0a](https://github.com/Tugamer89/FCG/commit/8270d0a366ea6c306a6d4335cf580ae07369a6df))
+* **ci:** add SonarCloud configuration file ([efcdabc](https://github.com/Tugamer89/FCG/commit/efcdabcd04fad90dc556f40b20d5d5dfa5ef6a88))
+* correct sonar.exclusions placement in configuration file ([edc69fe](https://github.com/Tugamer89/FCG/commit/edc69fea4f5a6267f4aaeb4dcaeddbb4739e617d))
+* downgrade C++ standard in SonarCloud configuration for compatibility ([5a6f287](https://github.com/Tugamer89/FCG/commit/5a6f28764f63133b48aa3382acb76c755f77ea0d))
+* update resource paths and improve code consistency across multiple files ([b14ee2f](https://github.com/Tugamer89/FCG/commit/b14ee2f42fd58ac2b1460acc7e7c571c89df8969))
+* update SonarCloud configuration for build environment and source inclusion ([d55e143](https://github.com/Tugamer89/FCG/commit/d55e14389780821bdc07c97f8178e03d14fc100b))
+
+
+### Code Refactoring
+
+* use 'auto' for type deduction in Camera class update method ([6ce56b6](https://github.com/Tugamer89/FCG/commit/6ce56b6435e2c94a7030e322ae87f4c3992a5074))
+
 ## [2.8.0](https://github.com/Tugamer89/FCG/compare/v2.7.0...v2.8.0) (2026-05-18)
 
 
