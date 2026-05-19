@@ -3,9 +3,9 @@
 
 #include <fstream>
 #include <glm/vec3.hpp>
+#include <iostream>
 #include <sstream>
 #include <string>
-#include <iostream>
 #include <vector>
 
 struct Mesh {
@@ -81,7 +81,8 @@ struct Mesh {
                 glm::uvec3 triangle;
 
                 if (!(file >> triangle[0] >> triangle[1] >> triangle[2])) {
-                    std::cerr << "Error: Failed to read triangle indices at face " << i << std::endl;
+                    std::cerr << "Error: Failed to read triangle indices at face " << i
+                              << std::endl;
                     exit(1);
                 }
                 indices.push_back(triangle);

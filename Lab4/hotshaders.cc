@@ -27,7 +27,7 @@ struct Setup {
                                     (desktop.size.y - window_height) / 2);
 
         window.create(sf::VideoMode({window_width, window_height}), "SFML + OpenGL",
-                                sf::Style::Default, sf::State::Windowed, settings);
+                      sf::Style::Default, sf::State::Windowed, settings);
         window.setPosition(centerPosition);
         window.setVerticalSyncEnabled(true);
 
