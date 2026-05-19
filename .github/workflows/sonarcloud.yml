@@ -21,6 +21,9 @@ jobs:
 
       - name: Setup Build Environment
         uses: ./.github/actions/setup-build-env
+        with:
+          os: 'Linux'
+          build_type: 'Release'
         
       - name: Generate Compilation Database
         run: |
