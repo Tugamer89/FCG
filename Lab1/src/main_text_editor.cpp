@@ -143,15 +143,17 @@ void moveCursorDown(State& gs, int speed) {
 }
 
 void handle(const sf::Event::KeyPressed& keyPressed, State& gs) {
+    using enum sf::Keyboard::Key;
+
     int speed = 1;
 
     if (keyPressed.control) {
         speed = 10;
 
-        if (keyPressed.code == sf::Keyboard::Key::X) {
+        if (keyPressed.code == X) {
             gs.window.close();
             return;
-        } else if (keyPressed.code == sf::Keyboard::Key::S) {
+        } else if (keyPressed.code == S) {
             std::ofstream outFile("output.txt");
 
             if (!outFile.is_open()) return;
@@ -164,13 +166,13 @@ void handle(const sf::Event::KeyPressed& keyPressed, State& gs) {
         }
     }
 
-    if (keyPressed.code == sf::Keyboard::Key::Left)
+    if (keyPressed.code == Left)
         moveCursorLeft(gs, speed);
-    else if (keyPressed.code == sf::Keyboard::Key::Right)
+    else if (keyPressed.code == Right)
         moveCursorRight(gs, speed);
-    else if (keyPressed.code == sf::Keyboard::Key::Up)
+    else if (keyPressed.code == Up)
         moveCursorUp(gs, speed);
-    else if (keyPressed.code == sf::Keyboard::Key::Down)
+    else if (keyPressed.code == Down)
         moveCursorDown(gs, speed);
 
     gs.adjustView();

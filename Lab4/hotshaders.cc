@@ -61,8 +61,8 @@ struct Scene {
     GLuint vao;
 
     GLint mod_color_location;
-    const std::vector<float> darken{0.2, 0.2, 0.2};
-    const std::vector<float> lighten{-0.2, -0.2, -0.2};
+    const std::vector<float> darken{0.2f, 0.2f, 0.2f};
+    const std::vector<float> lighten{-0.2f, -0.2f, -0.2f};
 
     Scene() { load(); }
     ~Scene() { clean(); }
@@ -132,8 +132,8 @@ struct Scene {
 // Draw!!! //
 /////////////
 
-void draw(Scene& scene, Shaders& shaders, float elapsed) {
-    static float accumulator = 0.0;
+void draw(const Scene& scene, float elapsed) {
+    static float accumulator = 0.0f;
 
     // clear the buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -150,14 +150,14 @@ void draw(Scene& scene, Shaders& shaders, float elapsed) {
         accumulator = 0.f;
     }
 
-    glDrawElements(GL_TRIANGLES, scene.indices.size(), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(scene.indices.size()), GL_UNSIGNED_INT, nullptr);
 }
 
 ////////////////////
 // SFML Callbacks //
 ////////////////////
 
-void handle(const sf::Event::KeyPressed& key, Scene& scene, Shaders& shaders, bool& running) {
+void handle(const sf::Event::KeyPressed& key, Shaders& shaders, bool& running) {
     switch (key.scancode) {
         case sf::Keyboard::Scancode::Space:
             shaders.reload(vertLoc, fragLoc);
@@ -202,10 +202,10 @@ int main() {
             else if (const auto* resized = event->getIf<sf::Event::Resized>())
                 glViewport(0, 0, resized->size.x, resized->size.y);
             else if (const auto* key_pressed = event->getIf<sf::Event::KeyPressed>())
-                handle(*key_pressed, scene, shaders, running);
+                handle(*key_pressed, shaders, running);
         }
 
-        draw(scene, shaders, clock.restart().asSeconds());
+        draw(scene, clock.restart().asSeconds());
 
         window.display();
     }

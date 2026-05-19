@@ -59,7 +59,7 @@ int main() {
     glBindVertexArray(vao);
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     const char* vertex_shader =
         "#version 410 core\n"
@@ -76,11 +76,11 @@ int main() {
         "}";
 
     GLuint vert_s = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vert_s, 1, &vertex_shader, NULL);
+    glShaderSource(vert_s, 1, &vertex_shader, nullptr);
     glCompileShader(vert_s);
 
     GLuint frag_s = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(frag_s, 1, &fragment_shader, NULL);
+    glShaderSource(frag_s, 1, &fragment_shader, nullptr);
     glCompileShader(frag_s);
 
     GLuint shader_program = glCreateProgram();

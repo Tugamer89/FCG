@@ -43,7 +43,7 @@ inline std::string getInfoLog(GLuint object, glGetIv_func get_iv, glGetInfoLog_f
     // reserve size and retrieve
     std::string info_log;
     info_log.resize(loglen);
-    get_infolog(object, loglen, nullptr, info_log.data());
+    get_infolog(object, loglen, nullptr, (GLchar*)info_log.data());
 
     // Remove null terminator
     if (!info_log.empty() && info_log.back() == '\0') {
@@ -96,7 +96,7 @@ class Shaders {
         }
     }
 
-    void clean() { glDeleteProgram(program); }
+    void clean() const { glDeleteProgram(program); }
 
     void reload(const std::string& vertex_file, const std::string& fragment_file) {
         clean();
@@ -108,7 +108,7 @@ class Shaders {
 
         // compile vertex shader
         GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertex, 1, vertex_source_ptr, NULL);
+        glShaderSource(vertex, 1, vertex_source_ptr, nullptr);
         glCompileShader(vertex);
         // check for errors
         params = -1;
@@ -121,7 +121,7 @@ class Shaders {
 
         // compile fragment shader
         GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment, 1, fragment_source_ptr, NULL);
+        glShaderSource(fragment, 1, fragment_source_ptr, nullptr);
         glCompileShader(fragment);
         // check for errors
         glGetShaderiv(fragment, GL_COMPILE_STATUS, &params);
@@ -151,9 +151,9 @@ class Shaders {
         return true;
     }
 
-    void use() { glUseProgram(program); }
+    void use() const { glUseProgram(program); }
 
-    void stop() { glUseProgram(0); }
+    void stop() const { glUseProgram(0); }
 };
 
 #endif

@@ -571,10 +571,11 @@ void handle_resize(const sf::Event::Resized& resized, sf::RenderWindow& window) 
 void handle_key_pressed(const sf::Event::KeyPressed& keyPressed, sf::RenderWindow& window,
                         State& gs) {
     switch (keyPressed.code) {
-        case sf::Keyboard::Key::Escape:
+        using enum sf::Keyboard::Key;
+        case Escape:
             window.close();
             return;
-        case sf::Keyboard::Key::Space:
+        case Space:
             if (gs.game_over || gs.game_won) {
                 gs.restart_game();
             } else {
@@ -582,10 +583,10 @@ void handle_key_pressed(const sf::Event::KeyPressed& keyPressed, sf::RenderWindo
                 gs.pause = !gs.pause;
             }
             return;
-        case sf::Keyboard::Key::Left:
+        case Left:
             gs.move_paddle_left = true;
             return;
-        case sf::Keyboard::Key::Right:
+        case Right:
             gs.move_paddle_right = true;
             return;
         default:
@@ -595,10 +596,11 @@ void handle_key_pressed(const sf::Event::KeyPressed& keyPressed, sf::RenderWindo
 
 void handle_key_released(const sf::Event::KeyReleased& keyReleased, State& gs) {
     switch (keyReleased.code) {
-        case sf::Keyboard::Key::Left:
+        using enum sf::Keyboard::Key;
+        case Left:
             gs.move_paddle_left = false;
             return;
-        case sf::Keyboard::Key::Right:
+        case Right:
             gs.move_paddle_right = false;
             return;
         default:

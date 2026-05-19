@@ -93,7 +93,7 @@ struct Shaders {
         }
     }
 
-    void clean() { glDeleteProgram(program); }
+    void clean() const { glDeleteProgram(program); }
 
     void reload(const std::string& vertex_file, const std::string& fragment_file) {
         clean();
@@ -105,7 +105,7 @@ struct Shaders {
 
         // compile vertex shader
         GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertex, 1, vertex_source_ptr, NULL);
+        glShaderSource(vertex, 1, vertex_source_ptr, nullptr);
         glCompileShader(vertex);
         // check for errors
         glGetShaderiv(vertex, GL_COMPILE_STATUS, &params);
@@ -117,7 +117,7 @@ struct Shaders {
 
         // compile fragment shader
         GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment, 1, fragment_source_ptr, NULL);
+        glShaderSource(fragment, 1, fragment_source_ptr, nullptr);
         glCompileShader(fragment);
         // check for errors
         params = false;

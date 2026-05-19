@@ -80,11 +80,13 @@ void handle(const sf::Event::Closed&, State& gs) {
 }
 
 void handle(const sf::Event::KeyPressed& keyPressed, State& gs) {
-    if (keyPressed.code == sf::Keyboard::Key::Escape)
+    using enum sf::Keyboard::Key;
+
+    if (keyPressed.code == Escape)
         gs.window.close();
 
-    else if (gs.selected_shape != -1 && (keyPressed.code == sf::Keyboard::Key::Delete ||
-                                         keyPressed.code == sf::Keyboard::Key::Backspace)) {
+    else if (gs.selected_shape != -1 && (keyPressed.code == Delete ||
+                                         keyPressed.code == Backspace)) {
         gs.shapes.erase(gs.shapes.begin() + gs.selected_shape);
         gs.selected_shape = -1;
     }

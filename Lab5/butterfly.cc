@@ -6,10 +6,10 @@
 #include "include/scene.hh"
 #include "include/setup.hh"
 
-const char* vertLoc = "resources/shaders/Lab5/vertex.vert";
-const char* fragLoc = "resources/shaders/Lab5/fragment.frag";
-const char* bunnyMeshLoc = "resources/meshes/bunny.off";
-const char* pyramidMeshLoc = "resources/meshes/pyramid.off";
+const char* const vertLoc = "resources/shaders/Lab5/vertex.vert";
+const char* const fragLoc = "resources/shaders/Lab5/fragment.frag";
+const char* const bunnyMeshLoc = "resources/meshes/bunny.off";
+const char* const pyramidMeshLoc = "resources/meshes/pyramid.off";
 
 ////////////////////
 // SFML Callbacks //
@@ -18,17 +18,18 @@ const char* pyramidMeshLoc = "resources/meshes/pyramid.off";
 void handle(const sf::Event::KeyPressed& key, Shaders& shaders, Camera& camera, Scene& scene,
             bool& running, bool& animate) {
     switch (key.scancode) {
-        case sf::Keyboard::Scancode::Space:
+        using enum sf::Keyboard::Scancode;
+        case Space:
             shaders.reload(vertLoc, fragLoc);
             glUseProgram(shaders.program);
             scene.reload(bunnyMeshLoc);
-        case sf::Keyboard::Scancode::R:
+        case R:
             camera.reset();
             return;
-        case sf::Keyboard::Scancode::Escape:
+        case Escape:
             running = false;
             return;
-        case sf::Keyboard::Scancode::Enter:
+        case Enter:
             animate = !animate;
             return;
         default:

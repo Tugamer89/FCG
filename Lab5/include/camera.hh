@@ -29,10 +29,10 @@ class Camera {
         float phi = glm::radians(phi_deg);
         float theta = glm::radians(theta_deg);
 
-        float cp = cos(phi);
-        float sp = sin(phi);
-        float ct = cos(theta);
-        float st = sin(theta);
+        float cp = static_cast<float>(cos(phi));
+        float sp = static_cast<float>(sin(phi));
+        float ct = static_cast<float>(cos(theta));
+        float st = static_cast<float>(sin(theta));
 
         // Y-axis rotation matrix (phi)
         glm::mat4 Ry(            //
@@ -50,8 +50,10 @@ class Camera {
             0.0, 0.0, 0.0, 1.0   //
         );
 
-        // TODO: base translation to the center of the model (e.g., by using the bounding box) when
-        // loading new mesh
+        /*
+         * TODO: base translation to the center of the model (e.g., by using the bounding box) when
+         * loading new mesh, and reload correct mesh with space key. Button to toggle edge drawing.
+        */
 
         // Translation matrix along Z (center z = -2.0)
         glm::mat4 T(                                      //
