@@ -24,7 +24,7 @@ runs:
           libgl1-mesa-dev libfreetype6-dev libharfbuzz-dev \
           libopenal-dev libflac-dev libogg-dev libvorbis-dev \
           libmbedtls-dev libssh2-1-dev \
-          gcc-15 g++-15
+          gcc-15 g++-15 libxi-dev xorg-dev
         
         echo "CC=gcc-15" >> $GITHUB_ENV
         echo "CXX=g++-15" >> $GITHUB_ENV
