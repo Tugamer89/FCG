@@ -13,10 +13,11 @@
 class Mesh {
    private:
     std::vector<glm::vec3> vertices;
+    std::vector<glm::vec3> normals;
     std::vector<glm::uvec3> triangles;
 
    public:
-    Mesh(const std::string& filename) {
+    explicit Mesh(const std::string& filename) {
         std::ifstream file(filename);
 
         if (!file.is_open()) {
@@ -43,23 +44,25 @@ class Mesh {
 
         // Parse header: vnum fnum ednum
         std::istringstream headerStream(line);
-        unsigned int vnum, fnum, ednum;
+        unsigned int vnum, fnum, ednum;  // NOSONAR
         if (!(headerStream >> vnum >> fnum >> ednum)) {
             fprintf(stderr, "Error: Invalid OFF header format\n");
             exit(1);
         }
 
         vertices.reserve(vnum);
+        normals.reserve(vnum);
         triangles.reserve(fnum);
 
         // Read vertices
         for (unsigned int i = 0; i < vnum; ++i) {
-            float x, y, z;
+            float x, y, z;  // NOSONAR
             if (!(file >> x >> y >> z)) {
                 fprintf(stderr, "Error: Failed to read vertex data at index %u\n", i);
                 exit(1);
             }
             vertices.emplace_back(x, y, z);
+            normals.emplace_back(0.f, 0.f, 0.f);
         }
 
         // Read faces
@@ -88,20 +91,21 @@ class Mesh {
         file.close();
 
         rescale();
+        compute_normals();
     }
 
-    void pack4gpu(std::vector<float>& points, std::vector<unsigned int>& indices) {
+    void pack4gpu(std::vector<float>& points, std::vector<unsigned int>& indices) const {
         points = {};
         // fill up flat points
-        for (auto v : vertices) {
+        for (unsigned int i = 0; i < vertices.size(); ++i) {
             // coords
-            points.push_back(v.x);
-            points.push_back(v.y);
-            points.push_back(v.z);
-            // color
-            points.push_back(0.8);
-            points.push_back(0.6);
-            points.push_back(0.2);
+            points.push_back(vertices[i].x);
+            points.push_back(vertices[i].y);
+            points.push_back(vertices[i].z);
+            // normal
+            points.push_back(normals[i].x);
+            points.push_back(normals[i].y);
+            points.push_back(normals[i].z);
         }
 
         indices = {};
@@ -130,11 +134,34 @@ class Mesh {
 
         // Find the maximum extent to preserve proportions
         //// float max_extent = std::max ({extents.x, extents.y, extents.z});
-        float max_extent = glm::distance(max_bounds, min_bounds) * 0.5;
+        float max_extent = glm::distance(max_bounds, min_bounds) * 0.5f;
 
         // Normalize vertices: translate to center, then scale uniformly
         for (auto& vertex : vertices) {
             vertex = (vertex - centers) / max_extent;
+        }
+    }
+
+    void compute_normals() {
+        for (const auto& triangle : triangles) {
+            const glm::vec3& v0 = vertices[triangle[0]];
+            const glm::vec3& v1 = vertices[triangle[1]];
+            const glm::vec3& v2 = vertices[triangle[2]];
+
+            // Compute the normal of the triangle
+            glm::vec3 edge1 = v1 - v0;
+            glm::vec3 edge2 = v2 - v0;
+            glm::vec3 normal = glm::cross(edge1, edge2);
+
+            // Accumulate the normal for each vertex
+            normals[triangle[0]] += normal;
+            normals[triangle[1]] += normal;
+            normals[triangle[2]] += normal;
+        }
+
+        // Normalize the accumulated normals
+        for (auto& normal : normals) {
+            normal = glm::normalize(normal);
         }
     }
 };

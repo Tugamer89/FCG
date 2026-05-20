@@ -84,31 +84,31 @@ class Camera {
     float od;  // object distance
 
    public:
-    Camera(Shaders& shaders) {
-        vp_loc = glGetUniformLocation(shaders.program, "vp");
+    explicit Camera(const Shaders& shaders) {
+        vp_loc = glGetUniformLocation(shaders.program, "tm");
         view_normal();
         update();
     }
 
     void drag(float dx, float dy) {
-        phi_deg += dx * 0.1;
-        theta_deg += dy * 0.1;
+        phi_deg += dx * 0.1f;
+        theta_deg += dy * 0.1f;
         theta_deg = theta_deg > 90.0 ? 90.0 : theta_deg;
         theta_deg = theta_deg < -90.0 ? -90.0 : theta_deg;
         update();
     }
 
     void zoom(float dy) {
-        float ratio = fd / 100.0;
+        float ratio = fd / 100.f;
         fd += dy * ratio;
-        if (fd < 0.1) fd = 0.1;
+        if (fd < 0.1) fd = 0.1f;
         update();
     }
 
     void dolly(float dy) {
-        float ratio = od / 100.0;
+        float ratio = od / 100.f;
         od -= dy * ratio;  // note: we go in the opposite direction of zoooming
-        if (od < 0.5) od = 0.5;
+        if (od < 0.5) od = 0.5f;
         update();
     }
 
@@ -131,28 +131,28 @@ class Camera {
     }
 
    private:
-    void update() {
-        float ncp = od - 1.0;  // distance near clip plane
-        if (ncp < 0.1) ncp = 0.1;
-        float fcp = od + 1.0;  // distance far clip plane
+    void update() const {
+        float ncp = od - 1.f;  // distance near clip plane
+        if (ncp < 0.1) ncp = 0.1f;
+        float fcp = od + 1.f;  // distance far clip plane
 
         // prepare rotation matrices
         float ps = glm::sin(glm::radians(phi_deg));
         float pc = glm::cos(glm::radians(phi_deg));
-        glm::mat4 ry = glm::mat4(pc, 0.0, -ps, 0.0,   // 1st column
+        glm::mat4 ry(pc, 0.0, -ps, 0.0,   // 1st column
                                  0.0, 1.0, 0.0, 0.0,  // 2nd column
                                  ps, 0.0, pc, 0.0,    // 3rd column
                                  0.0, 0.0, 0.0, 1.0);
 
         float ts = glm::sin(glm::radians(theta_deg));
         float tc = glm::cos(glm::radians(theta_deg));
-        glm::mat4 rx = glm::mat4(1.0, 0.0, 0.0, 0.0,  // 1st column
+        glm::mat4 rx(1.0, 0.0, 0.0, 0.0,  // 1st column
                                  0.0, tc, ts, 0.0,    // 2nd column
                                  0.0, -ts, tc, 0.0,   // 3rd column
                                  0.0, 0.0, 0.0, 1.0);
 
         // prepare translation matrix
-        glm::mat4 tz = glm::mat4(1.0, 0.0, 0.0, 0.0,  // 1st column
+        glm::mat4 tz(1.0, 0.0, 0.0, 0.0,  // 1st column
                                  0.0, 1.0, 0.0, 0.0,  // 2nd column
                                  0.0, 0.0, 1.0, 0.0,  // 3rd column
                                  0.0, 0.0, -od, 1.0   // translate object along the Z axis
@@ -160,7 +160,7 @@ class Camera {
 
         // prepare projection matrix
         float a = (fcp + ncp) / (ncp - fcp);      // coefficient 3rd col
-        float b = 2.0 * fcp * ncp / (ncp - fcp);  // coefficient 4th col
+        float b = 2.f * fcp * ncp / (ncp - fcp);  // coefficient 4th col
 
         /*** NOTE *******************************************************
          **  We use fd directly as coefficient in the first two lines. **
@@ -169,7 +169,7 @@ class Camera {
          **  width 2r and height 2t in view space, the coefficients    **
          **  containing fd must be scaled accordingly.                 **
          ****************************************************************/
-        glm::mat4 pr = glm::mat4(fd, 0.0, 0.0, 0.0,  // 1st column
+        glm::mat4 pr(fd, 0.0, 0.0, 0.0,  // 1st column
                                  0.0, fd, 0.0, 0.0,  // 2nd column
                                  0.0, 0.0, a, -1.0,  // 3rd column
                                  0.0, 0.0, b, 0.0    // 4th column
@@ -192,26 +192,26 @@ class Scene {
     GLuint vao;
 
    public:
-    Scene(std::string filename) { load(filename); }
+    explicit Scene(const std::string& filename) { load(filename); }
     ~Scene() { clean(); }
 
-    void load(std::string filename) {
+    void load(const std::string& filename) {
         Mesh mesh(filename);
         mesh.pack4gpu(points, indices);
         send_arrays_2a3f();
     }
 
-    void clean() {
+    void clean() const {
         glDeleteVertexArrays(1, &vao);
         glDeleteBuffers(1, &vbo);
     }
 
-    void draw() {
+    void draw() const {
         // clear the buffers
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // draw all elements as described by indices
-        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
     }
 
    private:
@@ -232,7 +232,7 @@ class Scene {
         glBindVertexArray(vao);
 
         // Attribute 0: position (x, y, z)
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
         glEnableVertexAttribArray(0);
 
         // Attribute 1: 3 generic floats (u, v, w)
@@ -254,20 +254,21 @@ class Scene {
 
 void handle(const sf::Event::KeyPressed& key, Shaders& shaders, Camera& camera, bool& running) {
     switch (key.scancode) {
-        case sf::Keyboard::Scancode::Space:
+        using enum sf::Keyboard::Scancode;
+        case Space:
             shaders.reload(vertex_shader_path, fragment_shader_path);
             shaders.use();
             return;
-        case sf::Keyboard::Scancode::N:
+        case N:
             camera.view_normal();
             return;
-        case sf::Keyboard::Scancode::T:
+        case T:
             camera.view_tele();
             return;
-        case sf::Keyboard::Scancode::W:
+        case W:
             camera.view_wide();
             return;
-        case sf::Keyboard::Scancode::Escape:
+        case Escape:
             running = false;
             return;
         default:
@@ -276,8 +277,8 @@ void handle(const sf::Event::KeyPressed& key, Shaders& shaders, Camera& camera, 
 }
 
 void handle(const sf::Event::MouseMoved* mouse, Camera& camera) {
-    float x = mouse->position.x;
-    float y = mouse->position.y;
+    float x = static_cast<float>(mouse->position.x);
+    float y = static_cast<float>(mouse->position.y);
     static float prev_x = 0;
     static float prev_y = 0;
 
