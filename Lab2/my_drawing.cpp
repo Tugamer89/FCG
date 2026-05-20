@@ -241,7 +241,7 @@ void doGraphics(State& gs) {
         drawable_shape.setOrigin({shape_radius, shape_radius});
         drawable_shape.setPosition(shape.position);
 
-        if (i == gs.selected_shape) {
+        if (static_cast<long long>(i) == gs.selected_shape) {
             drawable_shape.setOutlineColor(LIGHT_GRAY);
             drawable_shape.setOutlineThickness(-3.f);
         } else

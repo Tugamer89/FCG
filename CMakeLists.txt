@@ -36,6 +36,14 @@ target_compile_options(project_warnings INTERFACE
     $<$<CXX_COMPILER_ID:MSVC>:/W4>
 )
 
+# Common Dependencies
+add_library(common_deps INTERFACE)
+target_link_libraries(common_deps INTERFACE
+    project_warnings
+    SFML::Window
+    OpenGL::GL
+)
+
 set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
@@ -43,23 +51,15 @@ if(MINGW)
     add_link_options(-static -static-libgcc -static-libstdc++)
 endif()
 
-# --- HELPER FUNCTION ---
-# Function for copying resource files (e.g., shaders) to the build directory of the target.
-# Use: target_copy_shaders(<TARGET_NAME> <FOLDER_NAME_LAB> <SHADER_1> <SHADER_2> ...)
-function(target_copy_shaders TARGET_NAME FOLDER_NAME)
-    foreach(SHADER_FILE IN LISTS ARGN)
-        get_filename_component(SHADER_NAME "${SHADER_FILE}" NAME)
-        
-        add_custom_command(
-            TARGET ${TARGET_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${TARGET_NAME}>/resources/shaders/${FOLDER_NAME}"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${SHADER_FILE}"
-            "$<TARGET_FILE_DIR:${TARGET_NAME}>/resources/shaders/${FOLDER_NAME}/${SHADER_NAME}"
-            COMMENT "Copying the ${SHADER_NAME} shader for ${TARGET_NAME}"
-        )
-    endforeach()
-endfunction()
+add_custom_target(CopyResources ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/resources
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources
+    COMMENT "Copying resources in bin/resources..."
+)
+
+# Global Dependecies
+find_package(OpenGL REQUIRED)
 
 # Labs
 add_subdirectory(Lab1)

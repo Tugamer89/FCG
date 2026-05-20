@@ -10,7 +10,7 @@
 /// GUI State
 const int FONT_SIZE = 24;
 const int FONT_WIDTH = 14;
-const std::string FONT_NAME = "resources/dejavu-sans-mono-font/DejavuSansMono-5m7L.ttf";
+const std::string FONT_NAME = "resources/fonts/dejavu-sans-mono-font/DejavuSansMono-5m7L.ttf";
 
 struct State {
     // General resources
@@ -117,10 +117,10 @@ void moveCursorLeft(State& gs, int speed) {
 }
 
 void moveCursorRight(State& gs, int speed) {
-    if (gs.cursor_pos.x < gs.log[gs.cursor_pos.y].size())
+    if (gs.cursor_pos.x < static_cast<int>(gs.log[gs.cursor_pos.y].size()))
         gs.cursor_pos.x =
             std::min(gs.cursor_pos.x + speed, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
-    else if (gs.cursor_pos.y < gs.log.size() - 1) {
+    else if (gs.cursor_pos.y < static_cast<int>(gs.log.size()) - 1) {
         ++gs.cursor_pos.y;
         gs.cursor_pos.x = 0;
     }
@@ -135,8 +135,8 @@ void moveCursorUp(State& gs, int speed) {
 }
 
 void moveCursorDown(State& gs, int speed) {
-    if (gs.cursor_pos.y < gs.log.size() - 1) {
-        gs.cursor_pos.y = std::min(static_cast<int>(gs.log.size() - 1), gs.cursor_pos.y + speed);
+    if (gs.cursor_pos.y < static_cast<int>(gs.log.size()) - 1) {
+        gs.cursor_pos.y = std::min(static_cast<int>(gs.log.size()) - 1, gs.cursor_pos.y + speed);
         gs.cursor_pos.x =
             std::min(gs.cursor_pos.x, static_cast<int>(gs.log[gs.cursor_pos.y].size()));
     }
@@ -196,7 +196,7 @@ void doGraphics(State& gs) {
 
     // log
     for (std::size_t i = 0; i < lines_to_print; ++i) {
-        if (gs.text_view.position.x >= gs.log[gs.text_view.position.y + i].size()) continue;
+        if (gs.text_view.position.x >= static_cast<int>(gs.log[gs.text_view.position.y + i].size())) continue;
 
         logText.setPosition({FONT_WIDTH, static_cast<float>(i * FONT_SIZE) + FONT_SIZE});
         logText.setString(gs.log[gs.text_view.position.y + i].substr(

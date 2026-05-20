@@ -12,7 +12,7 @@ const int FONT_SIZE = 20;
 struct State {
     // General resources
     sf::RenderWindow window;
-    const sf::Font font{"resources/tuffy.ttf"};
+    const sf::Font font{"resources/fonts/tuffy.ttf"};
     // Text buffer
     std::vector<std::string> log;
 

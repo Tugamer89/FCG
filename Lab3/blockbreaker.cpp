@@ -191,7 +191,7 @@ struct State {
     Paddle paddle;
     Wall wall;
     sf::Clock clock;
-    sf::Font font = sf::Font("resources/dejavu-sans-mono-font/DejavuSansMono-5m7L.ttf");
+    sf::Font font = sf::Font("resources/fonts/dejavu-sans-mono-font/DejavuSansMono-5m7L.ttf");
 
     std::vector<Particle> particles;
 

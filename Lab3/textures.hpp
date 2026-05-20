@@ -8,12 +8,12 @@
  */
 
 constexpr unsigned char paddle_png[] = {
-#embed "../resources/texture_paddle.png"
+#embed "../resources/textures/texture_paddle.png"
 };
 constexpr std::size_t paddle_png_len = sizeof(paddle_png);
 
 constexpr unsigned char ball_png[] = {
-#embed "../resources/texture_ball.png"
+#embed "../resources/textures/texture_ball.png"
 };
 constexpr std::size_t ball_png_len = sizeof(ball_png);
 
