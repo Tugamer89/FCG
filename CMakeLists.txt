@@ -67,6 +67,7 @@ add_subdirectory(Lab2)
 add_subdirectory(Lab3)
 add_subdirectory(Lab4)
 add_subdirectory(Lab5)
+add_subdirectory(Lab6)
 
 # Installation & Packing
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/resources DESTINATION bin)
