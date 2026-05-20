@@ -196,7 +196,8 @@ void doGraphics(State& gs) {
 
     // log
     for (std::size_t i = 0; i < lines_to_print; ++i) {
-        if (gs.text_view.position.x >= static_cast<int>(gs.log[gs.text_view.position.y + i].size())) continue;
+        if (gs.text_view.position.x >= static_cast<int>(gs.log[gs.text_view.position.y + i].size()))
+            continue;
 
         logText.setPosition({FONT_WIDTH, static_cast<float>(i * FONT_SIZE) + FONT_SIZE});
         logText.setString(gs.log[gs.text_view.position.y + i].substr(
