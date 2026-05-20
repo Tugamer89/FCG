@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.10.0](https://github.com/Tugamer89/FCG/compare/v2.9.0...v2.10.0) (2026-05-20)
+
+
+### Features
+
+* **Lab6:** add Gouraud, Phong, and Flat shading implementations with corresponding shaders ([cadc4f3](https://github.com/Tugamer89/FCG/commit/cadc4f308db1e30dbe4af1ce9cd39eed0a575046))
+* **Lab6:** added the base for new Lab ([1d23418](https://github.com/Tugamer89/FCG/commit/1d234186c53443312092ce2ecf0e75cdfa0e854a))
+* **Lab6:** enhance shading with Gouraud shading implementation and update shader code ([cde7d66](https://github.com/Tugamer89/FCG/commit/cde7d6671b5069a396c1ccd741d444f0a2702f39))
+* **Lab6:** implement mesh normal computation and update shaders ([e7f29a1](https://github.com/Tugamer89/FCG/commit/e7f29a1f8e001cb1cd8118981562c8dc8e43f416))
+
+
+### Code Refactoring
+
+* **cmake:** simplify lab targets and globalize common settings ([0704d0d](https://github.com/Tugamer89/FCG/commit/0704d0d5c617afacacbe3ce6d39aee2614cbb0d4))
+
 ## [2.9.0](https://github.com/Tugamer89/FCG/compare/v2.8.0...v2.9.0) (2026-05-19)
 
 
