@@ -2,7 +2,6 @@
 #include "mesh.hh"
 
 #include <SFML/Window.hpp>
-#include <cstdlib>
 #include <glm/mat4x4.hpp>
 #include <glm/matrix.hpp>
 #include <glm/trigonometric.hpp>
@@ -13,8 +12,17 @@
 #include "glad/gl.h"
 #include "include/hotshaders.hh"
 
-const char* const vertex_shader_path = "resources/shaders/Lab6/vertex.vert";
-const char* const fragment_shader_path = "resources/shaders/Lab6/fragment.frag";
+// Gouraud shaders
+const char* const gouraud_vertex_shader_path = "resources/shaders/Lab6/gouraud_vertex.vert";
+const char* const gouraud_fragment_shader_path = "resources/shaders/Lab6/gouraud_fragment.frag";
+
+// Phong shaders
+const char* const phong_vertex_shader_path = "resources/shaders/Lab6/phong_vertex.vert";
+const char* const phong_fragment_shader_path = "resources/shaders/Lab6/phong_fragment.frag";
+
+// Flat shaders
+const char* const flat_vertex_shader_path = "resources/shaders/Lab6/flat_vertex.vert";
+const char* const flat_fragment_shader_path = "resources/shaders/Lab6/flat_fragment.frag";
 
 /////////////////////////////
 // Window and OpenGL setup //
@@ -294,34 +302,74 @@ class Scene {
     }
 };
 
+/////////////
+// Helpers //
+/////////////
+
+void reload_shaders(const std::string& vertex, const std::string& fragment, Shaders& shaders,
+                    CameraLights& camera) {
+    shaders.reload(vertex, fragment);
+    shaders.use();
+    camera.update_locations(shaders.program);
+    camera.push_update();
+}
+
 ////////////////////
 // SFML Callbacks //
 ////////////////////
 
 void handle(const sf::Event::KeyPressed& key, Shaders& shaders, CameraLights& camera,
             bool& running) {
+    static std::string current_vertex = gouraud_vertex_shader_path;
+    static std::string current_fragment = gouraud_fragment_shader_path;
+
+    bool should_reload = false;
+
     switch (key.scancode) {
         using enum sf::Keyboard::Scancode;
+
+        // --- Shaders ---
+        case F:
+            current_vertex = flat_vertex_shader_path;
+            current_fragment = flat_fragment_shader_path;
+            should_reload = true;
+            break;
+        case P:
+            current_vertex = phong_vertex_shader_path;
+            current_fragment = phong_fragment_shader_path;
+            should_reload = true;
+            break;
+        case G:
+            current_vertex = gouraud_vertex_shader_path;
+            current_fragment = gouraud_fragment_shader_path;
+            should_reload = true;
+            break;
         case Space:
-            shaders.reload(vertex_shader_path, fragment_shader_path);
-            shaders.use();
-            camera.update_locations(shaders.program);
-            camera.push_update();
-            return;
+            should_reload = true;
+            break;
+
+        // --- Camera ---
         case N:
             camera.view_normal();
-            return;
+            break;
         case T:
             camera.view_tele();
-            return;
+            break;
         case W:
             camera.view_wide();
-            return;
+            break;
+
+        // --- Window ---
         case Escape:
             running = false;
-            return;
+            break;
+
         default:
-            return;
+            break;
+    }
+
+    if (should_reload) {
+        reload_shaders(current_vertex, current_fragment, shaders, camera);
     }
 }
 
@@ -364,7 +412,7 @@ int main(int argc, char* argv[]) {
     Setup setup;
     sf::Window& window = *setup.window;
 
-    Shaders shaders(vertex_shader_path, fragment_shader_path);
+    Shaders shaders(gouraud_vertex_shader_path, gouraud_fragment_shader_path);
     shaders.use();
 
     CameraLights camera(shaders);
