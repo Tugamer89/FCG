@@ -37,8 +37,8 @@ class Setup {
         sf::Vector2i centerPosition((desktop.size.x - window_width) / 2,
                                     (desktop.size.y - window_height) / 2);
 
-        window = new sf::Window(sf::VideoMode({window_width, window_height}), "SFML + OpenGL", sf::Style::Default,
-                                sf::State::Windowed, settings);
+        window = new sf::Window(sf::VideoMode({window_width, window_height}), "SFML + OpenGL",
+                                sf::Style::Default, sf::State::Windowed, settings);
         window->setPosition(centerPosition);
         window->setVerticalSyncEnabled(true);
 
