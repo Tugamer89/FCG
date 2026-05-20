@@ -3,8 +3,8 @@
 
 #include <filesystem>
 #include <fstream>
-#include <string>
 #include <iostream>
+#include <string>
 
 // returns a C++ string loaded with the contents of a whole file
 inline std::string read_file(const std::string filename) {

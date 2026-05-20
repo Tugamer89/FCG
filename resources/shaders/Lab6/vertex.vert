@@ -1,10 +1,10 @@
 #version 410 core
 
-layout(location = 0) in vec3 vp; // Vertex Position
-layout(location = 1) in vec3 vn; // Vertex Normal
+layout(location = 0) in vec3 vp;  // Vertex Position
+layout(location = 1) in vec3 vn;  // Vertex Normal
 
 // Coordinate and matrix uniforms
-uniform mat4 tm; // MVP Matrix
+uniform mat4 tm;  // MVP Matrix
 uniform vec3 light_pos;
 uniform vec3 cam_pos;
 
@@ -26,10 +26,10 @@ void main() {
     gl_Position = tm * vec4(vp, 1.0);
 
     // Geometry vectors
-    vec3 N = normalize(vn); 
-    vec3 L = normalize(light_pos - vp); 
-    vec3 V = normalize(cam_pos - vp);   
-    vec3 R = reflect(-L, N);            
+    vec3 N = normalize(vn);
+    vec3 L = normalize(light_pos - vp);
+    vec3 V = normalize(cam_pos - vp);
+    vec3 R = reflect(-L, N);
 
     // Ambient reflection
     vec3 ambient = ambient_color * mat_ambient;
