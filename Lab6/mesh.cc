@@ -4,7 +4,10 @@
 #include <SFML/Window.hpp>
 #include <cstdlib>
 #include <glm/mat4x4.hpp>
+#include <glm/matrix.hpp>
 #include <glm/trigonometric.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 #include <iostream>
 
 #include "glad/gl.h"
@@ -70,9 +73,19 @@ class Setup {
 // Camera + World //
 ////////////////////
 
-class Camera {
+class CameraLights {
    private:
+    // Uniform locations
     GLint vp_loc;
+    GLint light_pos_loc;
+    GLint cam_pos_loc;
+    GLint mat_diffuse_loc;
+    GLint mat_specular_loc;
+    GLint mat_shininess_loc;
+    GLint mat_ambient_loc;
+    GLint light_color_loc;
+    GLint ambient_color_loc;
+
     float phi_deg = 210.0;
     float theta_deg = 2.0;
 
@@ -84,10 +97,22 @@ class Camera {
     float od;  // object distance
 
    public:
-    explicit Camera(const Shaders& shaders) {
-        vp_loc = glGetUniformLocation(shaders.program, "tm");
+    explicit CameraLights(const Shaders& shaders) {
+        update_locations(shaders.program);
         view_normal();
-        update();
+    }
+
+    // Refresh uniform locations
+    void update_locations(GLuint program) {
+        vp_loc = glGetUniformLocation(program, "tm");
+        light_pos_loc = glGetUniformLocation(program, "light_pos");
+        cam_pos_loc = glGetUniformLocation(program, "cam_pos");
+        mat_diffuse_loc = glGetUniformLocation(program, "mat_diffuse");
+        mat_specular_loc = glGetUniformLocation(program, "mat_specular");
+        mat_shininess_loc = glGetUniformLocation(program, "mat_shininess");
+        mat_ambient_loc = glGetUniformLocation(program, "mat_ambient");
+        light_color_loc = glGetUniformLocation(program, "light_color");
+        ambient_color_loc = glGetUniformLocation(program, "ambient_color");
     }
 
     void drag(float dx, float dy) {
@@ -130,6 +155,8 @@ class Camera {
         update();
     }
 
+    void push_update() const { update(); }
+
    private:
     void update() const {
         float ncp = od - 1.f;  // distance near clip plane
@@ -158,27 +185,45 @@ class Camera {
                      0.0, 0.0, -od, 1.0   // translate object along the Z axis
         );
 
-        // prepare projection matrix
+        // Combine into View matrix V
+        glm::mat4 V = tz * rx * ry;
+
+        // prepare projection matrix P
         float a = (fcp + ncp) / (ncp - fcp);      // coefficient 3rd col
         float b = 2.f * fcp * ncp / (ncp - fcp);  // coefficient 4th col
 
-        /*** NOTE *******************************************************
-         **  We use fd directly as coefficient in the first two lines. **
-         **  It works because our scene is in a unitary cube.          **
-         **  If the image plane is centered about the view axis, with  **
-         **  width 2r and height 2t in view space, the coefficients    **
-         **  containing fd must be scaled accordingly.                 **
-         ****************************************************************/
-        glm::mat4 pr(fd, 0.0, 0.0, 0.0,  // 1st column
-                     0.0, fd, 0.0, 0.0,  // 2nd column
-                     0.0, 0.0, a, -1.0,  // 3rd column
-                     0.0, 0.0, b, 0.0    // 4th column
+        glm::mat4 P(fd, 0.0, 0.0, 0.0,  // 1st column
+                    0.0, fd, 0.0, 0.0,  // 2nd column
+                    0.0, 0.0, a, -1.0,  // 3rd column
+                    0.0, 0.0, b, 0.0    // 4th column
         );
 
-        // Compute VP matrix and update it
+        // Compute VP matrix
         glm::mat4 vp;
-        vp = pr * tz * rx * ry;
+        vp = P * V;
         glUniformMatrix4fv(vp_loc, 1, GL_FALSE, &vp[0][0]);
+
+        // Calculate Camera position in WC: inverse(V) * Origin
+        glm::mat4 invV = glm::inverse(V);
+        glm::vec4 cam_pos4 = invV * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        glm::vec3 cam_pos(cam_pos4.x, cam_pos4.y, cam_pos4.z);
+
+        // Position the light exactly where the camera is located
+        glm::vec3 light_pos = cam_pos;
+
+        // Push positions
+        glUniform3fv(cam_pos_loc, 1, &cam_pos[0]);
+        glUniform3fv(light_pos_loc, 1, &light_pos[0]);
+
+        // Push generic material parameters
+        glUniform3f(mat_diffuse_loc, 0.1f, 0.7f, 0.8f);
+        glUniform3f(mat_specular_loc, 0.5f, 0.5f, 0.5f);
+        glUniform1f(mat_shininess_loc, 64.0f);
+        glUniform3f(mat_ambient_loc, 0.1f, 0.7f, 0.8f);
+
+        // Push generic light parameters
+        glUniform3f(light_color_loc, 1.0f, 1.0f, 1.0f);
+        glUniform3f(ambient_color_loc, 0.2f, 0.2f, 0.2f);
     }
 };
 
@@ -236,7 +281,7 @@ class Scene {
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
         glEnableVertexAttribArray(0);
 
-        // Attribute 1: 3 generic floats (u, v, w)
+        // Attribute 1: normal (nx, ny, nz)
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
                               (void*)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
@@ -253,12 +298,15 @@ class Scene {
 // SFML Callbacks //
 ////////////////////
 
-void handle(const sf::Event::KeyPressed& key, Shaders& shaders, Camera& camera, bool& running) {
+void handle(const sf::Event::KeyPressed& key, Shaders& shaders, CameraLights& camera,
+            bool& running) {
     switch (key.scancode) {
         using enum sf::Keyboard::Scancode;
         case Space:
             shaders.reload(vertex_shader_path, fragment_shader_path);
             shaders.use();
+            camera.update_locations(shaders.program);
+            camera.push_update();
             return;
         case N:
             camera.view_normal();
@@ -277,9 +325,9 @@ void handle(const sf::Event::KeyPressed& key, Shaders& shaders, Camera& camera, 
     }
 }
 
-void handle(const sf::Event::MouseMoved* mouse, Camera& camera) {
-    float x = static_cast<float>(mouse->position.x);
-    float y = static_cast<float>(mouse->position.y);
+void handle(const sf::Event::MouseMoved* mouse, CameraLights& camera) {
+    auto x = static_cast<float>(mouse->position.x);
+    auto y = static_cast<float>(mouse->position.y);
     static float prev_x = 0;
     static float prev_y = 0;
 
@@ -319,7 +367,7 @@ int main(int argc, char* argv[]) {
     Shaders shaders(vertex_shader_path, fragment_shader_path);
     shaders.use();
 
-    Camera camera(shaders);
+    CameraLights camera(shaders);
     Scene scene(meshfile);
 
     glEnable(GL_CULL_FACE);

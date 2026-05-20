@@ -1,8 +1,9 @@
 #version 410 core
 
-in vec3 interpolated_normal;
-out vec4 fragment_color;
+in vec4 front_color;
+
+out vec4 frag_colour;
 
 void main() {
-    fragment_color = vec4(interpolated_normal * 0.5 + 0.5, 1.0);
+    frag_colour = front_color;
 }

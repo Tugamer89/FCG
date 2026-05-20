@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <iostream>
 
 // returns a C++ string loaded with the contents of a whole file
 inline std::string read_file(const std::string filename) {
@@ -60,17 +61,44 @@ class Shaders {
     ~Shaders() { clean(); }
 
     void load() {
+        // Updated fallback code for Gouraud Shading
         const char* vertex_source =
             "#version 410 core\n"
-            "layout(location = 0) in vec3 vp;"
-            "void main() {"
-            "  gl_Position = vec4 (vp, 1.0);"
+            "layout(location = 0) in vec3 vp;\n"
+            "layout(location = 1) in vec3 vn;\n"
+            "uniform mat4 tm;\n"
+            "uniform vec3 light_pos;\n"
+            "uniform vec3 cam_pos;\n"
+            "uniform vec3 mat_diffuse;\n"
+            "uniform vec3 mat_specular;\n"
+            "uniform float mat_shininess;\n"
+            "uniform vec3 mat_ambient;\n"
+            "uniform vec3 light_color;\n"
+            "uniform vec3 ambient_color;\n"
+            "out vec4 front_color;\n"
+            "void main() {\n"
+            "  gl_Position = tm * vec4(vp, 1.0);\n"
+            "  vec3 N = normalize(vn);\n"
+            "  vec3 L = normalize(light_pos - vp);\n"
+            "  vec3 V = normalize(cam_pos - vp);\n"
+            "  vec3 R = reflect(-L, N);\n"
+            "  vec3 ambient = ambient_color * mat_ambient;\n"
+            "  float diff = max(dot(N, L), 0.0);\n"
+            "  vec3 diffuse = light_color * mat_diffuse * diff;\n"
+            "  float spec = 0.0;\n"
+            "  if (diff > 0.0) {\n"
+            "    spec = pow(max(dot(V, R), 0.0), mat_shininess);\n"
+            "  }\n"
+            "  vec3 specular = light_color * mat_specular * spec;\n"
+            "  front_color = vec4(clamp(ambient + diffuse + specular, 0.0, 1.0), 1.0);\n"
             "}";
+
         const char* fragment_source =
             "#version 410 core\n"
-            "out vec4 frag_colour;"
-            "void main() {"
-            "  frag_colour = vec4 (0.8, 0.1, 0.0, 1.0);"
+            "in vec4 front_color;\n"
+            "out vec4 frag_colour;\n"
+            "void main() {\n"
+            "  frag_colour = front_color;\n"
             "}";
 
         if (!compile_attach_link(&vertex_source, &fragment_source)) exit(1);
@@ -100,7 +128,7 @@ class Shaders {
     bool compile_attach_link(const char** vertex_source_ptr, const char** fragment_source_ptr) {
         int params = false;
 
-        // copmile vertex shader
+        // compile vertex shader
         GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex, 1, vertex_source_ptr, NULL);
         glCompileShader(vertex);
@@ -146,12 +174,6 @@ class Shaders {
     }
 
     void use() { glUseProgram(program); }
-
-    // if the need to stop the program arises, this is how to do it
-    // void stop ()
-    // {
-    //     glUseProgram (0);
-    // }
 };
 
 #endif
