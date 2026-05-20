@@ -140,22 +140,22 @@ class Camera {
         float ps = glm::sin(glm::radians(phi_deg));
         float pc = glm::cos(glm::radians(phi_deg));
         glm::mat4 ry(pc, 0.0, -ps, 0.0,   // 1st column
-                                 0.0, 1.0, 0.0, 0.0,  // 2nd column
-                                 ps, 0.0, pc, 0.0,    // 3rd column
-                                 0.0, 0.0, 0.0, 1.0);
+                     0.0, 1.0, 0.0, 0.0,  // 2nd column
+                     ps, 0.0, pc, 0.0,    // 3rd column
+                     0.0, 0.0, 0.0, 1.0);
 
         float ts = glm::sin(glm::radians(theta_deg));
         float tc = glm::cos(glm::radians(theta_deg));
         glm::mat4 rx(1.0, 0.0, 0.0, 0.0,  // 1st column
-                                 0.0, tc, ts, 0.0,    // 2nd column
-                                 0.0, -ts, tc, 0.0,   // 3rd column
-                                 0.0, 0.0, 0.0, 1.0);
+                     0.0, tc, ts, 0.0,    // 2nd column
+                     0.0, -ts, tc, 0.0,   // 3rd column
+                     0.0, 0.0, 0.0, 1.0);
 
         // prepare translation matrix
         glm::mat4 tz(1.0, 0.0, 0.0, 0.0,  // 1st column
-                                 0.0, 1.0, 0.0, 0.0,  // 2nd column
-                                 0.0, 0.0, 1.0, 0.0,  // 3rd column
-                                 0.0, 0.0, -od, 1.0   // translate object along the Z axis
+                     0.0, 1.0, 0.0, 0.0,  // 2nd column
+                     0.0, 0.0, 1.0, 0.0,  // 3rd column
+                     0.0, 0.0, -od, 1.0   // translate object along the Z axis
         );
 
         // prepare projection matrix
@@ -170,9 +170,9 @@ class Camera {
          **  containing fd must be scaled accordingly.                 **
          ****************************************************************/
         glm::mat4 pr(fd, 0.0, 0.0, 0.0,  // 1st column
-                                 0.0, fd, 0.0, 0.0,  // 2nd column
-                                 0.0, 0.0, a, -1.0,  // 3rd column
-                                 0.0, 0.0, b, 0.0    // 4th column
+                     0.0, fd, 0.0, 0.0,  // 2nd column
+                     0.0, 0.0, a, -1.0,  // 3rd column
+                     0.0, 0.0, b, 0.0    // 4th column
         );
 
         // Compute VP matrix and update it
@@ -211,7 +211,8 @@ class Scene {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // draw all elements as described by indices
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT,
+                       nullptr);
     }
 
    private:
