@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.10.1](https://github.com/Tugamer89/FCG/compare/v2.10.0...v2.10.1) (2026-05-25)
+
+
+### Bug Fixes
+
+* **Lab6:** flat shader ([1eb07c8](https://github.com/Tugamer89/FCG/commit/1eb07c82f774691466d799eddd5b66cda28fc86f))
+
 ## [2.10.0](https://github.com/Tugamer89/FCG/compare/v2.9.0...v2.10.0) (2026-05-20)
 
 
