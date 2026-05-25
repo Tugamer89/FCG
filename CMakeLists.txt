@@ -74,4 +74,4 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/resources DESTINATION bin)
 include(CPack)
 set(CPACK_GENERATOR "ZIP")
 set(CPACK_PACKAGE_NAME "fcg-labs")
-set(CPACK_PACKAGE_VERSION "2.10.1") # x-release-please-version
+set(CPACK_PACKAGE_VERSION "2.11.0") # x-release-please-version

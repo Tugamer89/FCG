@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.11.0](https://github.com/Tugamer89/FCG/compare/v2.10.1...v2.11.0) (2026-05-25)
+
+
+### Features
+
+* **Lab6:** Refactor shader code to use structured Light and Material types ([a16234b](https://github.com/Tugamer89/FCG/commit/a16234b34a76f3d9db18eb4d0bf8d2c339b78143))
+
+
+### Bug Fixes
+
+* **Lab6:** pdf track ([318f5ee](https://github.com/Tugamer89/FCG/commit/318f5ee72ecf2bb54357cb07263d3d402466eb15))
+
 ## [2.10.1](https://github.com/Tugamer89/FCG/compare/v2.10.0...v2.10.1) (2026-05-25)
 
 
