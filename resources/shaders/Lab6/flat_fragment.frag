@@ -1,6 +1,5 @@
 #version 410 core
 
-in vec3 vertex_normal;
 in vec3 vertex_position;
 
 // Coordinate and matrix uniforms
@@ -20,6 +19,10 @@ uniform vec3 ambient_color;
 out vec4 frag_colour;
 
 void main() {
+    vec3 dx = dFdx(vertex_position);
+    vec3 dy = dFdy(vertex_position);
+    vec3 vertex_normal = cross(dx, dy);
+
     // Geometry vectors
     vec3 N = normalize(vertex_normal);
     vec3 L = normalize(light_pos - vertex_position);
