@@ -2,19 +2,22 @@
 
 in vec3 vertex_position;
 
-// Coordinate and matrix uniforms
-uniform vec3 light_pos;
-uniform vec3 cam_pos;
+uniform vec3 camera_pos;
 
-// Material properties
-uniform vec3 mat_diffuse;
-uniform vec3 mat_specular;
-uniform float mat_shininess;
-uniform vec3 mat_ambient;
+struct Light {
+    vec3 direct_pos;
+    vec3 direct_val;
+    vec3 ambient_val;
+};
+uniform Light light;
 
-// Lighting properties
-uniform vec3 light_color;
-uniform vec3 ambient_color;
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+};
+uniform Material material;
 
 out vec4 frag_colour;
 
@@ -25,23 +28,23 @@ void main() {
 
     // Geometry vectors
     vec3 N = normalize(vertex_normal);
-    vec3 L = normalize(light_pos - vertex_position);
-    vec3 V = normalize(cam_pos - vertex_position);
+    vec3 L = normalize(light.direct_pos - vertex_position);
+    vec3 V = normalize(camera_pos - vertex_position);
     vec3 R = reflect(-L, N);
 
     // Ambient reflection
-    vec3 ambient = ambient_color * mat_ambient;
+    vec3 ambient = light.ambient_val * material.ambient;
 
     // Diffuse reflection
     float diff = max(dot(N, L), 0.0);
-    vec3 diffuse = light_color * mat_diffuse * diff;
+    vec3 diffuse = light.direct_val * material.diffuse * diff;
 
     // Specular reflection
     float spec = 0.0;
     if (diff > 0.0) {
-        spec = pow(max(dot(V, R), 0.0), mat_shininess);
+        spec = pow(max(dot(V, R), 0.0), material.shininess);
     }
-    vec3 specular = light_color * mat_specular * spec;
+    vec3 specular = light.direct_val * material.specular * spec;
 
     // Combine terms
     vec3 result = clamp(ambient + diffuse + specular, 0.0, 1.0);

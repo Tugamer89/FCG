@@ -42,7 +42,7 @@ class Setup {
         settings.minorVersion = 1;
 
         const int window_width = 800;
-        const int window_height = 600;
+        const int window_height = 800;
 
         sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
         sf::Vector2i centerPosition((desktop.size.x - window_width) / 2,
@@ -84,15 +84,22 @@ class Setup {
 class CameraLights {
    private:
     // Uniform locations
-    GLint vp_loc;
-    GLint light_pos_loc;
-    GLint cam_pos_loc;
-    GLint mat_diffuse_loc;
-    GLint mat_specular_loc;
-    GLint mat_shininess_loc;
-    GLint mat_ambient_loc;
-    GLint light_color_loc;
-    GLint ambient_color_loc;
+    GLint tm_loc;
+    GLint camera_pos_loc;
+    GLint direct_pos_loc;
+    GLint direct_val_loc;
+    GLint ambient_val_loc;
+    GLint ambient_loc;
+    GLint diffuse_loc;
+    GLint specular_loc;
+    GLint shininess_loc;
+
+    glm::vec3 direct_val = {1.f, 1.f, 1.f};      // rgb
+    glm::vec3 ambient_val = {0.2f, 0.2f, 0.2f};  // rgb
+    glm::vec3 ambient = {0.1f, 0.7f, 0.8f};      // xyz
+    glm::vec3 diffuse = {0.1f, 0.7f, 0.8f};      // xyz
+    glm::vec3 specular = {0.5f, 0.5f, 0.5f};     // xyz
+    float shininess = 64.f;                      // scalar
 
     float phi_deg = 210.0;
     float theta_deg = 2.0;
@@ -112,15 +119,15 @@ class CameraLights {
 
     // Refresh uniform locations
     void update_locations(GLuint program) {
-        vp_loc = glGetUniformLocation(program, "tm");
-        light_pos_loc = glGetUniformLocation(program, "light_pos");
-        cam_pos_loc = glGetUniformLocation(program, "cam_pos");
-        mat_diffuse_loc = glGetUniformLocation(program, "mat_diffuse");
-        mat_specular_loc = glGetUniformLocation(program, "mat_specular");
-        mat_shininess_loc = glGetUniformLocation(program, "mat_shininess");
-        mat_ambient_loc = glGetUniformLocation(program, "mat_ambient");
-        light_color_loc = glGetUniformLocation(program, "light_color");
-        ambient_color_loc = glGetUniformLocation(program, "ambient_color");
+        tm_loc = glGetUniformLocation(program, "tm");
+        camera_pos_loc = glGetUniformLocation(program, "camera_pos");
+        direct_pos_loc = glGetUniformLocation(program, "light.direct_pos");
+        direct_val_loc = glGetUniformLocation(program, "light.direct_val");
+        ambient_val_loc = glGetUniformLocation(program, "light.ambient_val");
+        ambient_loc = glGetUniformLocation(program, "material.ambient");
+        diffuse_loc = glGetUniformLocation(program, "material.diffuse");
+        specular_loc = glGetUniformLocation(program, "material.specular");
+        shininess_loc = glGetUniformLocation(program, "material.shininess");
     }
 
     void drag(float dx, float dy) {
@@ -209,7 +216,7 @@ class CameraLights {
         // Compute VP matrix
         glm::mat4 vp;
         vp = P * V;
-        glUniformMatrix4fv(vp_loc, 1, GL_FALSE, &vp[0][0]);
+        glUniformMatrix4fv(tm_loc, 1, GL_FALSE, &vp[0][0]);
 
         // Calculate Camera position in WC: inverse(V) * Origin
         glm::mat4 invV = glm::inverse(V);
@@ -219,19 +226,19 @@ class CameraLights {
         // Position the light exactly where the camera is located
         glm::vec3 light_pos = cam_pos;
 
-        // Push positions
-        glUniform3fv(cam_pos_loc, 1, &cam_pos[0]);
-        glUniform3fv(light_pos_loc, 1, &light_pos[0]);
+        // Camera position
+        glUniform3fv(camera_pos_loc, 1, &cam_pos[0]);
+
+        // Light parameters
+        glUniform3fv(direct_pos_loc, 1, &light_pos[0]);
+        glUniform3fv(direct_val_loc, 1, &direct_val[0]);
+        glUniform3fv(ambient_val_loc, 1, &ambient_val[0]);
 
         // Push generic material parameters
-        glUniform3f(mat_diffuse_loc, 0.1f, 0.7f, 0.8f);
-        glUniform3f(mat_specular_loc, 0.5f, 0.5f, 0.5f);
-        glUniform1f(mat_shininess_loc, 64.0f);
-        glUniform3f(mat_ambient_loc, 0.1f, 0.7f, 0.8f);
-
-        // Push generic light parameters
-        glUniform3f(light_color_loc, 1.0f, 1.0f, 1.0f);
-        glUniform3f(ambient_color_loc, 0.2f, 0.2f, 0.2f);
+        glUniform3fv(ambient_loc, 1, &ambient[0]);
+        glUniform3fv(diffuse_loc, 1, &diffuse[0]);
+        glUniform3fv(specular_loc, 1, &specular[0]);
+        glUniform1f(shininess_loc, shininess);
     }
 };
 

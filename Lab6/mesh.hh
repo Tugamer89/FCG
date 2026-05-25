@@ -29,13 +29,18 @@ class Mesh {
 
         // Read OFF header
         std::getline(file, line);
+        std::erase(line, '\r');
+        std::erase(line, '\n');
         if (line != "OFF") {
-            std::cerr << "Error: Invalid OFF file: missing OFF header" << std::endl;
+            std::cerr << line << std::endl
+                      << "Error: Invalid OFF file: missing OFF header" << std::endl;
             exit(1);
         }
 
         // Skip comments and empty lines
         while (std::getline(file, line)) {
+            std::erase(line, '\r');
+            std::erase(line, '\n');
             if (line.empty() || line[0] == '#') {
                 continue;
             }
