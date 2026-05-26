@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.1](https://github.com/Tugamer89/FCG/compare/v2.11.0...v2.11.1) (2026-05-25)
+
+
+### Bug Fixes
+
+* **Lab6:** updated track ([85aeec6](https://github.com/Tugamer89/FCG/commit/85aeec695c9e68aa0de895374c2d698c8944e460))
+
 ## [2.11.0](https://github.com/Tugamer89/FCG/compare/v2.10.1...v2.11.0) (2026-05-25)
 
 
