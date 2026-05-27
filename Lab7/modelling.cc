@@ -366,7 +366,7 @@ class Scene {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glm::mat4 rx90 = rotation_x(90.0f);
-        glm::mat4 tr1 = identity();                // translation (-1, 0, 0);
+        glm::mat4 tr1 = translation(0, -0.9, 0);
         glm::mat4 full_mm = tr1 * rx90 * mesh_mm;  // full model matrix
 
         glUniformMatrix4fv(model_loc, 1, GL_FALSE, &full_mm[0][0]);
