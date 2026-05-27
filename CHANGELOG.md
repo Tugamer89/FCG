@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.12.0](https://github.com/Tugamer89/FCG/compare/v2.11.1...v2.12.0) (2026-05-27)
+
+
+### Features
+
+* **Lab7:** first commit ([6e172fb](https://github.com/Tugamer89/FCG/commit/6e172fb4fe7716dc816819ceaa996603d66cc4e5))
+
+
+### Bug Fixes
+
+* **Scene:** update translation for model matrix ([ea6b376](https://github.com/Tugamer89/FCG/commit/ea6b3760eaa3eb37f1c45eceb28163ce0c0a13d0))
+
 ## [2.11.1](https://github.com/Tugamer89/FCG/compare/v2.11.0...v2.11.1) (2026-05-25)
 
 
